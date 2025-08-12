@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imposter by hAiQ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        
+        input, button, select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        input, select {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .danger {
+            background: #f44336;
+        }
+        
+        .danger:hover {
+            background: #da190b;
+        }
+        
+        .voting-screen {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.9);
+            margin-bottom: 20px;
+        }
+        
+        .game-screen {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .players-list {
+            margin: 20px 0;
+        }
+        
+        .lobby-section {
+            margin-top: 30px;
+        }
+        
+        .lobby-match {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .lobby-match:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .lobby-match-info {
+            flex: 1;
+        }
+        
+        .lobby-match-host {
+            font-weight: bold;
+            color: #ffeb3b;
+        }
+        
+        .lobby-match-players {
+            color: #ccc;
+            font-size: 0.9em;
+        }
+        
+        .lobby-match-join {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .lobby-match-join:hover {
+            background: #45a049;
+        }
+        
+        .no-matches {
+            text-align: center;
+            color: #ccc;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        .player {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .host {
+            background: rgba(255, 215, 0, 0.3);
+        }
+        
+        .game-info {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+        
+        .word-display {
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        
+        .imposter-word {
+            color: #ff6b6b;
+        }
+        
+        .words-list {
+            margin: 20px 0;
+        }
+        
+        .word-entry {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .vote-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .player-vote-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .error {
+            background: #f44336;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .success {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .current-player {
+            background: rgba(255, 215, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        /* Private Lobby Styles */
+        .private-lobby {
+            border-left: 4px solid #ff6b6b;
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
+        }
+        
+        .private-indicator {
+            color: #ff6b6b;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-left: 8px;
+        }
+        
+        .public-indicator {
+            color: #4ecdc4;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-left: 8px;
+        }
+        
+        .lobby-match-join {
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕵️ Imposter by hAiQ</h1>
+        
+        <!-- Main Menu -->
+        <div id="main-menu" class="card">
+            <h2>Willkommen!</h2>
+            <button onclick="showCreateMatch()">Neues Spiel erstellen</button>
+            <button onclick="showJoinMatch()">Spiel beitreten</button>
+            
+            <!-- Public Matches Lobby -->
+            <div id="lobby-section">
+                <h3>Öffentliche Spiele:</h3>
+                <div id="lobby-matches"></div>
+            </div>
+        </div>
+        
+        <!-- Create Match -->
+        <div id="create-match" class="card hidden">
+            <h2>Neues Spiel erstellen</h2>
+            <input type="text" id="host-name" placeholder="Dein Name" maxlength="20">
+            <label>
+                <input type="checkbox" id="private-match"> Privates Spiel (mit Passwort)
+            </label>
+            <input type="password" id="match-password" placeholder="Passwort (optional)" class="hidden">
+            <button onclick="createMatch()">Spiel erstellen</button>
+            <button onclick="showMainMenu()">Zurück</button>
+        </div>
+        
+        <!-- Join Match -->
+        <div id="join-match" class="card hidden">
+            <h2>Spiel beitreten</h2>
+            <input type="text" id="join-name" placeholder="Dein Name" maxlength="20">
+            <input type="text" id="match-id" placeholder="Spiel-ID" maxlength="6">
+            <input type="password" id="join-password" placeholder="Passwort (falls erforderlich)">
+            <button onclick="joinMatch()">Beitreten</button>
+            <button onclick="showMainMenu()">Zurück</button>
+        </div>
+        
+        <!-- Waiting Room -->
+        <div id="waiting-room" class="card hidden">
+            <h2>Warteraum</h2>
+            <div class="game-info">
+                <p>Spiel-ID: <strong id="current-match-id"></strong></p>
+                <p>Mindestens 4 Spieler benötigt zum Starten</p>
+            </div>
+            <div class="players-list" id="players-list"></div>
+            <button id="start-game-btn" onclick="startGame()" class="hidden">Spiel starten</button>
+            <button onclick="leaveMatch()" class="danger">Spiel verlassen</button>
+        </div>
+        
+        <!-- Game Screen -->
+        <div id="game-screen" class="card game-screen hidden">
+            <div class="game-info">
+                <p>Runde: <span id="current-round">1</span></p>
+                <p>Aktueller Spieler: <span id="current-player"></span></p>
+            </div>
+            
+            <div class="word-display">
+                Dein Wort: <span id="player-word"></span>
+            </div>
+            
+            <div id="word-input-section" class="hidden">
+                <input type="text" id="word-input" placeholder="Schreibe ein Wort, das zu deinem Begriff passt..." maxlength="30">
+                <button onclick="submitWord()">Wort abschicken</button>
+            </div>
+            
+            <div class="words-list" id="words-list"></div>
+        </div>
+        
+        <!-- Voting Screen -->
+        <div id="voting-screen" class="card voting-screen hidden">
+            <h2>Abstimmung</h2>
+            <div id="continue-voting" class="hidden">
+                <p>Was möchtet ihr machen?</p>
+                <div class="vote-options">
+                    <button onclick="vote('continue')">Weiterspielen</button>
+                    <button onclick="vote('guess')">Imposter erraten</button>
+                </div>
+            </div>
+            
+            <div id="imposter-voting" class="hidden">
+                <p>Wer ist der Imposter?</p>
+                <div class="player-vote-grid" id="vote-players"></div>
+            </div>
+            
+            <div class="game-info">
+                <p>Warten auf alle Stimmen...</p>
+            </div>
+        </div>
+        
+        <!-- Game Finished -->
+        <div id="game-finished" class="card hidden">
+            <h2>Spiel beendet!</h2>
+            <div id="game-result"></div>
+            <button onclick="showMainMenu()">Neues Spiel</button>
+        </div>
+        
+        <!-- Error Messages -->
+        <div id="error-message" class="error hidden"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        let currentMatchId = null;
+        let isHost = false;
+        let playerWord = null;
+        let isImposter = false;
+        let currentPlayerName = null;
+        
+        // UI Functions
+        function showMainMenu() {
+            hideAllScreens();
+            document.getElementById('main-menu').classList.remove('hidden');
+        }
+        
+        function showCreateMatch() {
+            hideAllScreens();
+            document.getElementById('create-match').classList.remove('hidden');
+        }
+        
+        function showJoinMatch() {
+            hideAllScreens();
+            document.getElementById('join-match').classList.remove('hidden');
+        }
+        
+        function hideAllScreens() {
+            const screens = ['main-menu', 'create-match', 'join-match', 'waiting-room', 'game-screen', 'voting-screen', 'game-finished'];
+            screens.forEach(screen => {
+                document.getElementById(screen).classList.add('hidden');
+            });
+            hideError();
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+        }
+        
+        function hideError() {
+            document.getElementById('error-message').classList.add('hidden');
+        }
+        
+        // Private match checkbox
+        document.getElementById('private-match').addEventListener('change', function() {
+            const passwordField = document.getElementById('match-password');
+            if (this.checked) {
+                passwordField.classList.remove('hidden');
+            } else {
+                passwordField.classList.add('hidden');
+                passwordField.value = '';
+            }
+        });
+        
+        // Game Functions
+        function createMatch() {
+            const playerName = document.getElementById('host-name').value.trim();
+            const isPrivate = document.getElementById('private-match').checked;
+            const password = document.getElementById('match-password').value;
+            
+            if (!playerName) {
+                showError('Bitte gib deinen Namen ein');
+                return;
+            }
+            
+            socket.emit('create_match', {
+                playerName: playerName,
+                isPrivate: isPrivate,
+                password: isPrivate ? password : null
+            });
+        }
+        
+        function joinMatch() {
+            const playerName = document.getElementById('join-name').value.trim();
+            const matchId = document.getElementById('match-id').value.trim().toUpperCase();
+            const password = document.getElementById('join-password').value;
+            
+            if (!playerName || !matchId) {
+                showError('Bitte fülle alle Felder aus');
+                return;
+            }
+            
+            socket.emit('join_match', {
+                playerName: playerName,
+                matchId: matchId,
+                password: password
+            });
+        }
+        
+        function startGame() {
+            socket.emit('start_game');
+        }
+        
+        function submitWord() {
+            const word = document.getElementById('word-input').value.trim();
+            if (!word) {
+                showError('Bitte gib ein Wort ein');
+                return;
+            }
+            
+            socket.emit('submit_word', { word: word });
+            document.getElementById('word-input').value = '';
+            document.getElementById('word-input-section').classList.add('hidden');
+        }
+        
+        function vote(voteType, targetPlayerId = null) {
+            socket.emit('submit_vote', {
+                voteType: voteType,
+                targetPlayerId: targetPlayerId
+            });
+            
+            // Hide voting options after voting
+            document.getElementById('continue-voting').classList.add('hidden');
+            document.getElementById('imposter-voting').classList.add('hidden');
+        }
+        
+        function leaveMatch() {
+            socket.disconnect();
+            socket.connect();
+            showMainMenu();
+            currentMatchId = null;
+            isHost = false;
+        }
+        
+        // Socket Events
+        socket.on('match_created', (data) => {
+            currentMatchId = data.matchId;
+            isHost = true;
+            document.getElementById('current-match-id').textContent = data.matchId;
+            hideAllScreens();
+            document.getElementById('waiting-room').classList.remove('hidden');
+        });
+        
+        socket.on('match_joined', (data) => {
+            currentMatchId = data.matchId;
+            document.getElementById('current-match-id').textContent = data.matchId;
+            hideAllScreens();
+            document.getElementById('waiting-room').classList.remove('hidden');
+        });
+        
+        socket.on('match_updated', (data) => {
+            updatePlayersList(data.players);
+            
+            if (isHost && data.players.length >= 4) {
+                document.getElementById('start-game-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('start-game-btn').classList.add('hidden');
+            }
+        });
+        
+        socket.on('game_started', (data) => {
+            playerWord = data.word;
+            isImposter = data.isImposter;
+            currentPlayerName = data.currentPlayer;
+            
+            // Reset rounds when game starts
+            allRounds = [];
+            
+            document.getElementById('player-word').textContent = data.word;
+            document.getElementById('player-word').className = data.isImposter ? 'imposter-word' : '';
+            document.getElementById('current-player').textContent = data.currentPlayer;
+            document.getElementById('current-round').textContent = data.round;
+            
+            hideAllScreens();
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            // Show input if it's player's turn
+            if (data.currentPlayer === getPlayerName()) {
+                document.getElementById('word-input-section').classList.remove('hidden');
+            }
+        });
+        
+        socket.on('word_submitted', (data) => {
+            // Update with all rounds data from server
+            if (data.allRounds) {
+                allRounds = data.allRounds;
+            }
+            updateWordsList(data.words, data.round);
+            currentPlayerName = data.currentPlayer;
+            
+            if (data.currentPlayer) {
+                document.getElementById('current-player').textContent = data.currentPlayer;
+                document.getElementById('current-round').textContent = data.round;
+                
+                if (data.currentPlayer === getPlayerName()) {
+                    document.getElementById('word-input-section').classList.remove('hidden');
+                }
+            }
+            
+            if (data.gameState === 'voting_continue') {
+                // Show voting screen but keep game screen visible
+                document.getElementById('voting-screen').classList.remove('hidden');
+                document.getElementById('continue-voting').classList.remove('hidden');
+                // Hide word input section during voting
+                document.getElementById('word-input-section').classList.add('hidden');
+            }
+        });
+        
+        socket.on('vote_updated', (data) => {
+            // Update with all rounds data from server
+            if (data.allRounds) {
+                allRounds = data.allRounds;
+            }
+            
+            if (data.gameState === 'voting_imposter') {
+                document.getElementById('continue-voting').classList.add('hidden');
+                document.getElementById('imposter-voting').classList.remove('hidden');
+                updateVotingPlayers(data.players);
+                // Keep game screen visible during imposter voting too
+                document.getElementById('game-screen').classList.remove('hidden');
+                document.getElementById('voting-screen').classList.remove('hidden');
+            } else if (data.gameState === 'playing') {
+                // Hide voting screen and show only game screen for new round
+                document.getElementById('voting-screen').classList.add('hidden');
+                document.getElementById('game-screen').classList.remove('hidden');
+                updateWordsList(data.words, data.round);
+                document.getElementById('current-player').textContent = data.currentPlayer;
+                document.getElementById('current-round').textContent = data.round;
+                
+                if (data.currentPlayer === getPlayerName()) {
+                    document.getElementById('word-input-section').classList.remove('hidden');
+                }
+            }
+        });
+        
+        socket.on('game_finished', (data) => {
+            hideAllScreens();
+            document.getElementById('game-finished').classList.remove('hidden');
+            
+            const resultDiv = document.getElementById('game-result');
+            if (data.imposterWon) {
+                resultDiv.innerHTML = `
+                    <h3>🎭 Der Imposter hat gewonnen!</h3>
+                    <p>Imposter: <strong>${data.imposter}</strong></p>
+                    <p>Das Wort war: <strong>${data.word}</strong></p>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <h3>🎉 Die Spieler haben gewonnen!</h3>
+                    <p>Der Imposter <strong>${data.imposter}</strong> wurde entlarvt!</p>
+                    <p>Das Wort war: <strong>${data.word}</strong></p>
+                `;
+            }
+        });
+        
+        socket.on('error', (data) => {
+            showError(data.message);
+        });
+        
+        // Helper Functions
+        function getPlayerName() {
+            return document.getElementById('host-name').value || document.getElementById('join-name').value;
+        }
+        
+        function updatePlayersList(players) {
+            const listDiv = document.getElementById('players-list');
+            listDiv.innerHTML = '<h3>Spieler (' + players.length + '/8):</h3>';
+            
+            players.forEach(player => {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'player' + (player.isHost ? ' host' : '');
+                playerDiv.innerHTML = `
+                    <span>${player.name}${player.isHost ? ' (Host)' : ''}</span>
+                `;
+                listDiv.appendChild(playerDiv);
+            });
+        }
+        
+        // Store all words from all rounds
+        let allRounds = [];
+        
+        function updateWordsList(words, round = null) {
+            const listDiv = document.getElementById('words-list');
+            
+            // If we have a specific round, update our stored rounds
+            if (round && words.length > 0) {
+                // Check if this round already exists
+                const existingRoundIndex = allRounds.findIndex(r => r.round === round);
+                if (existingRoundIndex >= 0) {
+                    allRounds[existingRoundIndex] = { round: round, words: words };
+                } else {
+                    allRounds.push({ round: round, words: words });
+                }
+            }
+            
+            // Clear the display
+            listDiv.innerHTML = '';
+            
+            if (allRounds.length === 0) {
+                return;
+            }
+            
+            // Display all rounds
+            allRounds.forEach(roundData => {
+                const roundTitle = document.createElement('h3');
+                roundTitle.textContent = `Runde ${roundData.round}:`;
+                roundTitle.style.marginTop = '20px';
+                roundTitle.style.marginBottom = '10px';
+                roundTitle.style.color = '#ffeb3b';
+                listDiv.appendChild(roundTitle);
+                
+                roundData.words.forEach(wordEntry => {
+                    const wordDiv = document.createElement('div');
+                    wordDiv.className = 'word-entry';
+                    wordDiv.innerHTML = `
+                        <span><strong>${wordEntry.playerName}:</strong></span>
+                        <span>${wordEntry.word}</span>
+                    `;
+                    listDiv.appendChild(wordDiv);
+                });
+            });
+        }
+        
+        function updateVotingPlayers(players) {
+            const voteDiv = document.getElementById('vote-players');
+            voteDiv.innerHTML = '';
+            
+            players.forEach(player => {
+                const button = document.createElement('button');
+                button.textContent = player.name;
+                button.onclick = () => vote('imposter', player.id);
+                voteDiv.appendChild(button);
+            });
+        }
+        
+        // Lobby Functions
+        function updateLobby(matches) {
+            const lobbyDiv = document.getElementById('lobby-matches');
+            lobbyDiv.innerHTML = '';
+            
+            if (matches.length === 0) {
+                const noMatchesDiv = document.createElement('div');
+                noMatchesDiv.className = 'no-matches';
+                noMatchesDiv.textContent = 'Keine Spiele verfügbar';
+                lobbyDiv.appendChild(noMatchesDiv);
+                return;
+            }
+            
+            matches.forEach(match => {
+                const matchDiv = document.createElement('div');
+                matchDiv.className = 'lobby-match';
+                
+                // Private Lobby Styling
+                if (match.isPrivate) {
+                    matchDiv.classList.add('private-lobby');
+                }
+                
+                const privateIndicator = match.isPrivate ? 
+                    `<span class="private-indicator">🔒 Privat</span>` : 
+                    `<span class="public-indicator">🌐 Öffentlich</span>`;
+                
+                matchDiv.innerHTML = `
+                    <div class="lobby-match-info">
+                        <div class="lobby-match-host">Host: ${match.hostName} ${privateIndicator}</div>
+                        <div class="lobby-match-players">${match.playerCount}/8 Spieler</div>
+                        <div style="font-size: 0.8em; color: #999;">ID: ${match.id}</div>
+                    </div>
+                    <button class="lobby-match-join" onclick="joinMatchWithPassword('${match.id}', ${match.isPrivate})">
+                        ${match.isPrivate ? 'Mit Passwort beitreten' : 'Beitreten'}
+                    </button>
+                `;
+                lobbyDiv.appendChild(matchDiv);
+            });
+        }
+        
+        function quickJoinMatch(matchId) {
+            const playerName = prompt('Dein Name:');
+            if (!playerName || !playerName.trim()) {
+                showError('Bitte gib einen Namen ein');
+                return;
+            }
+
+            socket.emit('join_match', {
+                playerName: playerName.trim(),
+                matchId: matchId,
+                password: ''
+            });
+        }
+        
+        function joinMatchWithPassword(matchId, isPrivate) {
+            const playerName = prompt('Dein Name:');
+            if (!playerName || !playerName.trim()) {
+                showError('Bitte gib einen Namen ein');
+                return;
+            }
+            
+            let password = '';
+            if (isPrivate) {
+                password = prompt('Passwort für private Lobby:');
+                if (password === null) return; // User cancelled
+            }
+            
+            socket.emit('join_match', {
+                playerName: playerName.trim(),
+                matchId: matchId,
+                password: password
+            });
+        }        // Socket Events for Lobby
+        socket.on('lobby_updated', (data) => {
+            updateLobby(data.matches);
+        });
+        
+        // Enter key support
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('word-input-section').classList.contains('hidden')) {
+                    submitWord();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
