@@ -387,6 +387,7 @@
         let playerWord = null;
         let isImposter = false;
         let currentPlayerName = null;
+        let myPlayerName = null;
         
         // UI Functions
         function showMainMenu() {
@@ -445,6 +446,8 @@
                 return;
             }
             
+            myPlayerName = playerName; // Store player name globally
+            
             socket.emit('create_match', {
                 playerName: playerName,
                 isPrivate: isPrivate,
@@ -461,6 +464,8 @@
                 showError('Bitte fülle alle Felder aus');
                 return;
             }
+            
+            myPlayerName = playerName; // Store player name globally
             
             socket.emit('join_match', {
                 playerName: playerName,
@@ -502,6 +507,7 @@
             showMainMenu();
             currentMatchId = null;
             isHost = false;
+            myPlayerName = null; // Reset player name
         }
         
         // Socket Events
@@ -631,6 +637,9 @@
         
         // Helper Functions
         function getPlayerName() {
+            if (myPlayerName) {
+                return myPlayerName;
+            }
             return document.getElementById('host-name').value || document.getElementById('join-name').value;
         }
         
@@ -752,6 +761,8 @@
                 return;
             }
 
+            myPlayerName = playerName.trim(); // Store player name globally
+
             socket.emit('join_match', {
                 playerName: playerName.trim(),
                 matchId: matchId,
@@ -765,6 +776,8 @@
                 showError('Bitte gib einen Namen ein');
                 return;
             }
+            
+            myPlayerName = playerName.trim(); // Store player name globally
             
             let password = '';
             if (isPrivate) {
