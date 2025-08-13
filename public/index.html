@@ -246,7 +246,7 @@
         .game-players-list {
             position: fixed;
             top: 20px;
-            left: 20px;
+            right: 20px;  /* Changed from left to right to make space for completed rounds */
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%);
             backdrop-filter: blur(15px);
             border: 2px solid rgba(255, 255, 255, 0.4);
@@ -261,11 +261,11 @@
             display: none; /* Hidden by default */
         }
         
-        /* Completed Rounds Sidebar */
+        /* Completed Rounds Sidebar - positioned on the LEFT */
         .completed-rounds-sidebar {
             position: fixed;
             top: 20px;
-            right: 20px;
+            left: 20px;  /* Changed from right to left */
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%);
             backdrop-filter: blur(15px);
             border: 2px solid rgba(255, 255, 255, 0.4);
@@ -796,7 +796,7 @@
             /* Mobile adjustments for game sidebars */
             .game-players-list {
                 top: 10px;
-                left: 10px;
+                right: 10px;  /* Changed from left to right */
                 min-width: 150px;
                 max-width: 180px;
                 padding: 10px;
@@ -805,7 +805,7 @@
             
             .completed-rounds-sidebar {
                 top: 10px;
-                right: 10px;
+                left: 10px;  /* Changed from right to left */
                 min-width: 200px;
                 max-width: 250px;
                 max-height: 50vh;
@@ -967,13 +967,13 @@
             <button onclick="leaveMatch()" class="danger">Spiel verlassen</button>
         </div>
 
-        <!-- Players List (positioned at screen edge, outside of game card) -->
+        <!-- Players List (positioned at right edge, outside of game card) -->
         <div id="game-players-list" class="game-players-list">
             <h4>Spieler:</h4>
             <div id="game-players-display"></div>
         </div>
 
-        <!-- Completed Rounds Sidebar (positioned at right edge) -->
+        <!-- Completed Rounds Sidebar (positioned at left edge) -->
         <div id="completed-rounds-sidebar" class="completed-rounds-sidebar">
             <h4>Abgeschlossene Runden</h4>
             <div id="completed-rounds-display"></div>
