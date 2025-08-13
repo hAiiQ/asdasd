@@ -261,6 +261,64 @@
             display: none; /* Hidden by default */
         }
         
+        /* Completed Rounds Sidebar */
+        .completed-rounds-sidebar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 280px;
+            max-width: 320px;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+        }
+        
+        .completed-rounds-sidebar h4 {
+            margin: 0 0 15px 0;
+            color: #fff;
+            font-size: 1em;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .completed-round {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        .completed-round h5 {
+            margin: 0 0 8px 0;
+            color: #ffeb3b;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .completed-round .word-entry-small {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            padding: 6px 10px;
+            margin: 4px 0;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.8em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .completed-round .word-entry-small strong {
+            color: #4ecdc4;
+        }
+        
         .game-players-list h4 {
             margin: 0 0 10px 0;
             color: #fff;
@@ -734,6 +792,42 @@
             .player-vote-grid {
                 grid-template-columns: 1fr;
             }
+            
+            /* Mobile adjustments for game sidebars */
+            .game-players-list {
+                top: 10px;
+                left: 10px;
+                min-width: 150px;
+                max-width: 180px;
+                padding: 10px;
+                font-size: 0.85em;
+            }
+            
+            .completed-rounds-sidebar {
+                top: 10px;
+                right: 10px;
+                min-width: 200px;
+                max-width: 250px;
+                max-height: 50vh;
+                padding: 10px;
+                font-size: 0.8em;
+            }
+            
+            .completed-round {
+                margin-bottom: 15px;
+                padding: 8px;
+            }
+            
+            .completed-round h5 {
+                font-size: 0.8em;
+                margin-bottom: 6px;
+            }
+            
+            .completed-round .word-entry-small {
+                padding: 4px 8px;
+                margin: 2px 0;
+                font-size: 0.7em;
+            }
         }
     </style>
 </head>
@@ -877,6 +971,12 @@
         <div id="game-players-list" class="game-players-list">
             <h4>Spieler:</h4>
             <div id="game-players-display"></div>
+        </div>
+
+        <!-- Completed Rounds Sidebar (positioned at right edge) -->
+        <div id="completed-rounds-sidebar" class="completed-rounds-sidebar">
+            <h4>Abgeschlossene Runden</h4>
+            <div id="completed-rounds-display"></div>
         </div>
 
         <!-- Game Screen -->
@@ -1205,6 +1305,7 @@
             });
             hideError();
             hideGamePlayersList(); // Hide players list when switching screens
+            hideCompletedRoundsSidebar(); // Hide completed rounds sidebar when switching screens
         }
         
         function showGamePlayersList() {
@@ -1218,6 +1319,20 @@
             const playersList = document.getElementById('game-players-list');
             if (playersList) {
                 playersList.style.display = 'none';
+            }
+        }
+        
+        function showCompletedRoundsSidebar() {
+            const sidebar = document.getElementById('completed-rounds-sidebar');
+            if (sidebar) {
+                sidebar.style.display = 'block';
+            }
+        }
+        
+        function hideCompletedRoundsSidebar() {
+            const sidebar = document.getElementById('completed-rounds-sidebar');
+            if (sidebar) {
+                sidebar.style.display = 'none';
             }
         }
         
@@ -1780,6 +1895,9 @@
             document.getElementById('game-screen').classList.remove('hidden');
             showGamePlayersList(); // Show players list when game starts
             
+            // Reset completed rounds sidebar when new game starts
+            hideCompletedRoundsSidebar();
+            
             // Debug: Check if element exists
             setTimeout(() => {
                 checkPlayersListElement();
@@ -1825,6 +1943,7 @@
                 
                 document.getElementById('game-screen').classList.add('hidden');
                 hideGamePlayersList();
+                hideCompletedRoundsSidebar(); // Hide sidebar during voting
                 document.getElementById('voting-screen').classList.remove('hidden');
                 
                 if (data.gameState === 'voting_continue') {
@@ -1897,6 +2016,7 @@
                 // Hide game screen during voting and only show voting screen
                 document.getElementById('game-screen').classList.add('hidden');
                 hideGamePlayersList(); // Hide players list during voting
+                hideCompletedRoundsSidebar(); // Hide sidebar during voting
                 document.getElementById('voting-screen').classList.remove('hidden');
                 
                 // Update voting status
@@ -1915,6 +2035,7 @@
                 // Hide game screen during voting and only show voting screen
                 document.getElementById('game-screen').classList.add('hidden');
                 hideGamePlayersList(); // Hide players list during voting
+                hideCompletedRoundsSidebar(); // Hide sidebar during voting
                 document.getElementById('voting-screen').classList.remove('hidden');
                 
                 // Update voting status
@@ -2108,23 +2229,28 @@
                 }
             }
             
-            // Clear the display
+            // Clear the main display
             listDiv.innerHTML = '';
             
             if (allRounds.length === 0) {
                 return;
             }
             
-            // Display all rounds
-            allRounds.forEach(roundData => {
+            // Get current round (highest round number)
+            const currentRoundNum = Math.max(...allRounds.map(r => r.round));
+            const currentRoundData = allRounds.find(r => r.round === currentRoundNum);
+            
+            // Display only current round in the center
+            if (currentRoundData && currentRoundData.words.length > 0) {
                 const roundTitle = document.createElement('h3');
-                roundTitle.textContent = `Runde ${roundData.round}:`;
-                roundTitle.style.marginTop = '20px';
-                roundTitle.style.marginBottom = '10px';
+                roundTitle.textContent = `Aktuelle Runde ${currentRoundData.round}:`;
+                roundTitle.style.marginTop = '0px';
+                roundTitle.style.marginBottom = '15px';
                 roundTitle.style.color = '#ffeb3b';
+                roundTitle.style.textAlign = 'center';
                 listDiv.appendChild(roundTitle);
                 
-                roundData.words.forEach(wordEntry => {
+                currentRoundData.words.forEach(wordEntry => {
                     const wordDiv = document.createElement('div');
                     wordDiv.className = 'word-entry';
                     wordDiv.innerHTML = `
@@ -2133,6 +2259,61 @@
                     `;
                     listDiv.appendChild(wordDiv);
                 });
+            }
+            
+            // Update completed rounds sidebar
+            updateCompletedRoundsSidebar();
+        }
+        
+        function updateCompletedRoundsSidebar() {
+            const sidebarDiv = document.getElementById('completed-rounds-display');
+            const sidebar = document.getElementById('completed-rounds-sidebar');
+            
+            // Clear sidebar
+            sidebarDiv.innerHTML = '';
+            
+            if (allRounds.length <= 1) {
+                // Hide sidebar if no completed rounds
+                sidebar.style.display = 'none';
+                return;
+            }
+            
+            // Get current round number
+            const currentRoundNum = Math.max(...allRounds.map(r => r.round));
+            
+            // Get completed rounds (all except current)
+            const completedRounds = allRounds
+                .filter(r => r.round < currentRoundNum)
+                .sort((a, b) => b.round - a.round); // Sort by round number, newest first
+            
+            if (completedRounds.length === 0) {
+                sidebar.style.display = 'none';
+                return;
+            }
+            
+            // Show sidebar
+            sidebar.style.display = 'block';
+            
+            // Display completed rounds
+            completedRounds.forEach(roundData => {
+                const roundDiv = document.createElement('div');
+                roundDiv.className = 'completed-round';
+                
+                const roundTitle = document.createElement('h5');
+                roundTitle.textContent = `Runde ${roundData.round}`;
+                roundDiv.appendChild(roundTitle);
+                
+                roundData.words.forEach(wordEntry => {
+                    const wordDiv = document.createElement('div');
+                    wordDiv.className = 'word-entry-small';
+                    wordDiv.innerHTML = `
+                        <span><strong>${wordEntry.playerName}:</strong></span>
+                        <span>${wordEntry.word}</span>
+                    `;
+                    roundDiv.appendChild(wordDiv);
+                });
+                
+                sidebarDiv.appendChild(roundDiv);
             });
         }
         
