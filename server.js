@@ -2,18 +2,142 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Serve static files
+// Middleware
 app.use(express.static('public'));
+app.use('/images', express.static('images'));
+app.use(express.json());
+
+// User system
+const usersFile = 'users.json';
+let users = {};
+
+// Load users from file
+try {
+    if (fs.existsSync(usersFile)) {
+        users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+    }
+} catch (error) {
+    console.log('Creating new users file...');
+    users = {};
+}
+
+// Save users to file
+function saveUsers() {
+    try {
+        fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+    } catch (error) {
+        console.error('Failed to save users to file:', error);
+        throw error; // Re-throw so calling code can handle it
+    }
+}
+
+// Validate username
+function isValidUsername(username) {
+    if (!username || username.length < 3) return false;
+    if (!/^[a-zA-Z0-9]+$/.test(username)) return false;
+    
+    const badWords = ['admin', 'fuck', 'shit', 'idiot', 'stupid', 'dumb', 'noob', 'nazi', 'hitler'];
+    const lowerName = username.toLowerCase();
+    return !badWords.some(word => lowerName.includes(word));
+}
 
 // Game state
 const matches = new Map(); // matchId -> match object
 const socketToMatch = new Map(); // socketId -> matchId
 const socketToPlayer = new Map(); // socketId -> player object
+const loggedInUsers = new Map(); // socketId -> username
+const usersInGame = new Map(); // username -> matchId (prevents multiple sessions)
+const activeSessions = new Map(); // username -> socketId (prevents multiple logins)
+
+// API Routes
+app.post('/api/register', (req, res) => {
+    const { username, password } = req.body;
+    
+    if (!isValidUsername(username)) {
+        return res.json({ success: false, message: 'Ungültiger Benutzername. Mindestens 3 Zeichen, nur Buchstaben und Zahlen, keine Beleidigungen.' });
+    }
+    
+    if (!password || password.length < 3) {
+        return res.json({ success: false, message: 'Passwort muss mindestens 3 Zeichen lang sein.' });
+    }
+    
+    const lowerUsername = username.toLowerCase();
+    if (users[lowerUsername]) {
+        return res.json({ success: false, message: 'Benutzername bereits vergeben.' });
+    }
+    
+    users[lowerUsername] = {
+        username: username, // Original case
+        password: password,
+        stats: {
+            gamesPlayed: 0,
+            wins: 0,
+            losses: 0,
+            imposterWins: 0,
+            wordsGuessedAsImposter: 0,
+            totalVotesReceived: 0,
+            correctVotes: 0,
+            createdAt: new Date().toISOString()
+        }
+    };
+    
+    try {
+        saveUsers();
+        res.json({ success: true, message: 'Registrierung erfolgreich!' });
+    } catch (error) {
+        console.error('Error saving users:', error);
+        // Remove the user from memory if saving failed
+        delete users[lowerUsername];
+        res.json({ success: false, message: 'Fehler beim Speichern. Versuche es erneut.' });
+    }
+});
+
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    const lowerUsername = username.toLowerCase();
+    
+    if (!users[lowerUsername]) {
+        return res.json({ success: false, message: 'Benutzer nicht gefunden.' });
+    }
+    
+    if (users[lowerUsername].password !== password) {
+        return res.json({ success: false, message: 'Falsches Passwort.' });
+    }
+    
+    res.json({ 
+        success: true, 
+        message: 'Login erfolgreich!',
+        user: {
+            username: users[lowerUsername].username,
+            stats: users[lowerUsername].stats
+        }
+    });
+});
+
+app.get('/api/stats/:username', (req, res) => {
+    const lowerUsername = req.params.username.toLowerCase();
+    
+    if (!users[lowerUsername]) {
+        return res.json({ success: false, message: 'Benutzer nicht gefunden.' });
+    }
+    
+    res.json({ 
+        success: true, 
+        stats: users[lowerUsername].stats,
+        username: users[lowerUsername].username
+    });
+});
+
+// Client-side routing support - MUST be before Socket.IO events
+app.get('/match/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Word pool for the game with hints for imposter
 const wordPool = [
@@ -230,14 +354,18 @@ function createMatch(hostName, isPrivate, password = null) {
         id: matchId,
         host: null,
         players: [],
+        allParticipants: [], // Track all players who have ever joined this match
+        originalPlayerData: new Map(), // Store original player data by name for rejoining
         isPrivate,
         password,
         gameState: 'waiting', // waiting, playing, voting_continue, voting_imposter, finished
         currentWord: null,
         imposterHint: null,
         imposterSocketId: null,
+        imposterPlayerName: null, // Store imposter by name, not socket ID
         currentRound: 0,
         currentPlayerIndex: 0,
+        currentPlayerName: null, // Store current player by name
         wordsThisRound: [], // {playerId, word}
         allRounds: [], // Store all previous rounds
         votes: [], // for voting phases
@@ -253,20 +381,70 @@ function addPlayerToMatch(matchId, socketId, playerName) {
     
     if (match.players.length >= 8) return false; // Max 8 players
     
+    // Check if user is already in a game
+    const userKey = loggedInUsers.get(socketId);
+    if (userKey && usersInGame.has(userKey)) {
+        return { error: 'Du bist bereits in einem anderen Spiel. Verlasse es zuerst.' };
+    }
+    
+    // Check if this is a rejoin - restore original player data
+    const originalData = match.originalPlayerData.get(playerName);
+    const isRejoin = originalData !== undefined;
+    
+    // Determine host status - only if no current host exists and it's the first player
+    let shouldBeHost = false;
+    if (!isRejoin && match.players.length === 0) {
+        shouldBeHost = true;
+    } else if (isRejoin) {
+        // When rejoining, never restore host status - current host should remain
+        shouldBeHost = false;
+    }
+    
     const player = {
         id: socketId,
         name: playerName,
-        isHost: match.players.length === 0,
-        word: null,
-        isImposter: false
+        isHost: shouldBeHost,
+        word: isRejoin ? originalData.word : null,
+        isImposter: isRejoin ? originalData.isImposter : false
     };
     
     match.players.push(player);
+    
+    // Add to allParticipants if not already there
+    if (!match.allParticipants.includes(playerName)) {
+        match.allParticipants.push(playerName);
+    }
+    
+    // Store original player data for potential rejoins
+    if (!isRejoin) {
+        match.originalPlayerData.set(playerName, {
+            word: null,
+            isImposter: false,
+            originalJoinOrder: match.allParticipants.length - 1
+        });
+    } else {
+        // Update socket ID for rejoining player
+        if (originalData.isImposter) {
+            match.imposterSocketId = socketId; // Update imposter socket ID
+        }
+        
+        // Restore current player turn if this was the active player
+        if (match.currentPlayerName === playerName && match.gameState === 'playing') {
+            match.currentPlayerIndex = match.players.length - 1; // Set to current position in array
+        }
+    }
+    
     if (player.isHost) {
         match.host = socketId;
     }
     
     socketToMatch.set(socketId, matchId);
+    socketToPlayer.set(socketId, player);
+    
+    // Mark user as in game
+    if (userKey) {
+        usersInGame.set(userKey, matchId);
+    }
     socketToPlayer.set(socketId, player);
     
     return true;
@@ -278,6 +456,12 @@ function removePlayerFromMatch(socketId) {
     
     const match = matches.get(matchId);
     if (!match) return;
+    
+    // Remove user from usersInGame map
+    const userKey = loggedInUsers.get(socketId);
+    if (userKey && usersInGame.has(userKey)) {
+        usersInGame.delete(userKey);
+    }
     
     match.players = match.players.filter(p => p.id !== socketId);
     
@@ -304,8 +488,13 @@ function startGame(matchId) {
     match.gameState = 'playing';
     match.currentRound = 1;
     match.currentPlayerIndex = Math.floor(Math.random() * match.players.length);
+    match.currentPlayerName = match.players[match.currentPlayerIndex].name; // Store current player name
     match.wordsThisRound = [];
     match.allRounds = []; // Reset all rounds history
+    
+    // Store the initial random player order for consistent round progression
+    match.initialPlayerOrder = [...match.players]; // Copy the current player array
+    match.initialPlayerIndex = match.currentPlayerIndex; // Store the starting index
     
     // Choose random word and imposter
     const wordObj = wordPool[Math.floor(Math.random() * wordPool.length)];
@@ -313,8 +502,9 @@ function startGame(matchId) {
     match.imposterHint = wordObj.hint;
     const imposterIndex = Math.floor(Math.random() * match.players.length);
     match.imposterSocketId = match.players[imposterIndex].id;
+    match.imposterPlayerName = match.players[imposterIndex].name; // Store imposter name
     
-    // Assign words to players
+    // Assign words to players and update original data
     match.players.forEach((player, index) => {
         if (index === imposterIndex) {
             player.word = `Imposter (Tipp: ${match.imposterHint})`;
@@ -322,6 +512,46 @@ function startGame(matchId) {
         } else {
             player.word = match.currentWord;
             player.isImposter = false;
+        }
+        
+        // Update original player data for rejoining
+        const originalData = match.originalPlayerData.get(player.name);
+        if (originalData) {
+            originalData.word = player.word;
+            originalData.isImposter = player.isImposter;
+        }
+    });
+    
+    return true;
+}
+
+function resetMatchToLobby(matchId) {
+    const match = matches.get(matchId);
+    if (!match) return false;
+    
+    // Reset game state to waiting
+    match.gameState = 'waiting';
+    match.currentWord = null;
+    match.imposterHint = null;
+    match.imposterSocketId = null;
+    match.imposterPlayerName = null;
+    match.currentRound = 0;
+    match.currentPlayerIndex = 0;
+    match.currentPlayerName = null;
+    match.wordsThisRound = [];
+    match.allRounds = [];
+    match.votes = [];
+    
+    // Reset player data but keep them in the match
+    match.players.forEach(player => {
+        player.word = null;
+        player.isImposter = false;
+        
+        // Reset original player data
+        const originalData = match.originalPlayerData.get(player.name);
+        if (originalData) {
+            originalData.word = null;
+            originalData.isImposter = false;
         }
     });
     
@@ -341,6 +571,11 @@ function submitWord(matchId, socketId, word) {
         return { imposterWon: true };
     }
     
+    // Prevent normal players from saying the target word
+    if (match.imposterSocketId !== socketId && word.toLowerCase() === match.currentWord.toLowerCase()) {
+        return { error: 'Du kannst das gesuchte Wort nicht verwenden!' };
+    }
+    
     match.wordsThisRound.push({
         playerId: socketId,
         playerName: currentPlayer.name,
@@ -349,6 +584,7 @@ function submitWord(matchId, socketId, word) {
     
     // Move to next player
     match.currentPlayerIndex = (match.currentPlayerIndex + 1) % match.players.length;
+    match.currentPlayerName = match.players[match.currentPlayerIndex].name; // Update current player name
     
     // Check if round is complete
     if (match.wordsThisRound.length === match.players.length) {
@@ -388,11 +624,14 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
                 match.gameState = 'voting_imposter';
                 match.votes = [];
             } else {
-                // Continue to next round
+                // Continue to next round - use the same player order as first round
                 match.currentRound++;
                 match.gameState = 'playing';
                 match.wordsThisRound = [];
-                match.currentPlayerIndex = Math.floor(Math.random() * match.players.length);
+                
+                // Reset to the initial starting player and order from round 1
+                match.currentPlayerIndex = match.initialPlayerIndex;
+                match.currentPlayerName = match.initialPlayerOrder[match.initialPlayerIndex].name;
             }
         } else if (match.gameState === 'voting_imposter') {
             // Count votes for each player
@@ -426,8 +665,131 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
     return { success: true };
 }
 
+// Update player statistics after game ends
+function updatePlayerStats(matchId, imposterWon, imposterSocketId) {
+    const match = matches.get(matchId);
+    if (!match) return;
+    
+    match.players.forEach(player => {
+        const userKey = loggedInUsers.get(player.id);
+        if (!userKey || !users[userKey]) return;
+        
+        const playerStats = users[userKey].stats;
+        playerStats.gamesPlayed++;
+        
+        const isImposter = player.id === imposterSocketId;
+        
+        if (isImposter) {
+            if (imposterWon) {
+                playerStats.wins++;
+                playerStats.imposterWins++;
+            } else {
+                playerStats.losses++;
+            }
+            
+            // Count words guessed as imposter (if they participated in guessing)
+            if (match.wordsThisRound && match.wordsThisRound.some(w => w.playerId === player.id)) {
+                playerStats.wordsGuessedAsImposter++;
+            }
+        } else {
+            if (imposterWon) {
+                playerStats.losses++;
+            } else {
+                playerStats.wins++;
+            }
+        }
+        
+        // Count votes received
+        if (match.votes) {
+            const votesReceived = Object.values(match.votes).filter(vote => vote.targetPlayerId === player.id).length;
+            playerStats.totalVotesReceived += votesReceived;
+            
+            // Count correct votes (voting for imposter when civilians win)
+            if (!imposterWon && match.votes[player.id] && match.votes[player.id].targetPlayerId === imposterSocketId) {
+                playerStats.correctVotes++;
+            }
+        }
+    });
+    
+    saveUsers();
+}
+
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
+    
+    // User login via socket
+    socket.on('user_login', (data) => {
+        const { username, password } = data;
+        const lowerUsername = username.toLowerCase();
+        
+        if (!users[lowerUsername]) {
+            socket.emit('login_result', { success: false, message: 'Benutzer nicht gefunden.' });
+            return;
+        }
+        
+        if (users[lowerUsername].password !== password) {
+            socket.emit('login_result', { success: false, message: 'Falsches Passwort.' });
+            return;
+        }
+        
+        // Check if user is already logged in from another session
+        if (activeSessions.has(lowerUsername)) {
+            const existingSocketId = activeSessions.get(lowerUsername);
+            // Kick the existing session
+            const existingSocket = io.sockets.sockets.get(existingSocketId);
+            if (existingSocket) {
+                existingSocket.emit('force_logout', { message: 'Dein Account wurde von einem anderen Gerät angemeldet.' });
+                existingSocket.disconnect();
+            }
+            // Clean up the old session
+            loggedInUsers.delete(existingSocketId);
+            activeSessions.delete(lowerUsername);
+            usersInGame.delete(lowerUsername);
+        }
+        
+        // Set up new session
+        loggedInUsers.set(socket.id, lowerUsername);
+        activeSessions.set(lowerUsername, socket.id);
+        
+        // Check if user was in a match and try to reconnect
+        let currentMatch = null;
+        for (const [matchId, match] of matches.entries()) {
+            const playerIndex = match.players.findIndex(p => p.name.toLowerCase() === lowerUsername);
+            if (playerIndex !== -1) {
+                console.log(`User ${lowerUsername} found in match ${matchId}, reconnecting...`);
+                // Update the socket ID for this player
+                match.players[playerIndex].id = socket.id; // Update socket ID
+                socketToMatch.set(socket.id, matchId);
+                usersInGame.set(lowerUsername, matchId); // Re-add to usersInGame
+                currentMatch = {
+                    id: matchId,
+                    ...match
+                };
+                
+                // Join the socket to the match room
+                socket.join(matchId);
+                
+                // Notify other players that this player reconnected
+                socket.to(matchId).emit('player_reconnected', {
+                    username: users[lowerUsername].username
+                });
+                
+                break;
+            }
+        }
+        
+        console.log(`User ${lowerUsername} login - currentMatch:`, currentMatch ? currentMatch.id : 'none');
+        
+        socket.emit('login_result', { 
+            success: true, 
+            message: 'Login erfolgreich!',
+            user: {
+                username: users[lowerUsername].username,
+                stats: users[lowerUsername].stats
+            },
+            currentMatch: currentMatch
+        });
+    });
     
     // Send current matches to new user (including private ones)
     socket.emit('lobby_updated', {
@@ -443,9 +805,41 @@ io.on('connection', (socket) => {
     });
     
     socket.on('create_match', (data) => {
-        const { playerName, isPrivate, password } = data;
+        const { isPrivate, password } = data;
+        
+        // Check if user is logged in
+        const userKey = loggedInUsers.get(socket.id);
+        if (!userKey) {
+            socket.emit('error', { message: 'Du musst eingeloggt sein um ein Spiel zu erstellen' });
+            return;
+        }
+        
+        console.log('create_match attempt - userKey:', userKey, 'usersInGame:', usersInGame.has(userKey), 'socketToMatch:', socketToMatch.has(socket.id));
+        
+        // Ensure user is not marked as being in a game before creating new match
+        if (userKey && usersInGame.has(userKey)) {
+            console.log('User was still marked as in game, cleaning up before creating new match');
+            usersInGame.delete(userKey);
+        }
+        
+        // Also clean up socket mappings
+        if (socketToMatch.has(socket.id)) {
+            console.log('Socket was still in socketToMatch, cleaning up');
+            socketToMatch.delete(socket.id);
+        }
+        
+        const user = users[userKey];
+        const playerName = user.username;
+        
         const match = createMatch(playerName, isPrivate, password);
-        addPlayerToMatch(match.id, socket.id, playerName);
+        const result = addPlayerToMatch(match.id, socket.id, playerName);
+        
+        if (result && result.error) {
+            socket.emit('error', { message: result.error });
+            // Delete the match if player couldn't join
+            matches.delete(match.id);
+            return;
+        }
         
         socket.join(match.id);
         socket.emit('match_created', { matchId: match.id });
@@ -469,7 +863,24 @@ io.on('connection', (socket) => {
     });
     
     socket.on('join_match', (data) => {
-        const { matchId, playerName, password } = data;
+        const { matchId, password } = data;
+        
+        // Check if user is logged in
+        const userKey = loggedInUsers.get(socket.id);
+        if (!userKey) {
+            socket.emit('error', { message: 'Du musst eingeloggt sein um einem Spiel beizutreten' });
+            return;
+        }
+        
+        // Ensure user is not marked as being in a game before joining new match
+        if (userKey && usersInGame.has(userKey)) {
+            console.log('User was still marked as in game, cleaning up before joining new match');
+            usersInGame.delete(userKey);
+        }
+        
+        const user = users[userKey];
+        const playerName = user.username;
+        
         const match = matches.get(matchId);
         
         if (!match) {
@@ -482,18 +893,55 @@ io.on('connection', (socket) => {
             return;
         }
         
-        if (match.gameState !== 'waiting') {
-            socket.emit('error', { message: 'Spiel bereits gestartet' });
+        // Check if this is a rejoin attempt (player was previously in this match)
+        const wasPlayerInMatch = match.allParticipants && match.allParticipants.includes(playerName);
+        
+        if (match.gameState !== 'waiting' && !wasPlayerInMatch) {
+            socket.emit('error', { message: 'Spiel bereits gestartet - nur teilnehmende Spieler können wieder beitreten' });
             return;
         }
         
-        if (!addPlayerToMatch(matchId, socket.id, playerName)) {
-            socket.emit('error', { message: 'Match ist voll oder Fehler beim Beitreten' });
+        const result = addPlayerToMatch(matchId, socket.id, playerName);
+        if (!result || result.error) {
+            const errorMessage = result && result.error ? result.error : 'Match ist voll oder Fehler beim Beitreten';
+            socket.emit('error', { message: errorMessage });
             return;
         }
         
         socket.join(matchId);
-        socket.emit('match_joined', { matchId });
+        
+        // If rejoining an active game, send appropriate screen data
+        if (match.gameState === 'waiting') {
+            socket.emit('match_joined', { matchId });
+        } else {
+            // Rejoining an active game
+            socket.emit('match_joined', { matchId });
+            
+            // Send current game state with complete information
+            const playerData = match.players.find(p => p.id === socket.id);
+            if (playerData) {
+                socket.emit('game_started', {
+                    word: playerData.word,
+                    isImposter: playerData.isImposter,
+                    currentPlayer: match.currentPlayerName || (match.players[match.currentPlayerIndex] ? match.players[match.currentPlayerIndex].name : null),
+                    round: match.currentRound,
+                    players: match.players
+                });
+                
+                // Send additional game state data if needed
+                if (match.gameState === 'voting_continue' || match.gameState === 'voting_imposter') {
+                    socket.emit('vote_updated', {
+                        gameState: match.gameState,
+                        votes: match.votes,
+                        players: match.players,
+                        currentPlayer: match.currentPlayerName,
+                        round: match.currentRound,
+                        words: match.wordsThisRound,
+                        allRounds: match.allRounds
+                    });
+                }
+            }
+        }
         io.to(matchId).emit('match_updated', {
             players: match.players,
             gameState: match.gameState
@@ -533,7 +981,8 @@ io.on('connection', (socket) => {
                 word: player.word,
                 isImposter: player.isImposter,
                 currentPlayer: match.players[match.currentPlayerIndex].name,
-                round: match.currentRound
+                round: match.currentRound,
+                players: match.players
             });
         });
         
@@ -556,13 +1005,45 @@ io.on('connection', (socket) => {
         const matchId = socketToMatch.get(socket.id);
         const result = submitWord(matchId, socket.id, word);
         
+        if (result && result.error) {
+            socket.emit('error', { message: result.error });
+            return;
+        }
+        
         if (result.imposterWon) {
             const match = matches.get(matchId);
+            updatePlayerStats(matchId, true, match.imposterSocketId);
             io.to(matchId).emit('game_finished', {
                 imposterWon: true,
                 imposter: match.players.find(p => p.id === match.imposterSocketId).name,
                 word: match.currentWord
             });
+            
+            // Reset match to lobby after a delay
+            setTimeout(() => {
+                resetMatchToLobby(matchId);
+                const resetMatch = matches.get(matchId);
+                if (resetMatch) {
+                    io.to(matchId).emit('return_to_lobby', {
+                        matchId: matchId,
+                        players: resetMatch.players,
+                        gameState: resetMatch.gameState
+                    });
+                    
+                    // Update lobby list
+                    io.emit('lobby_updated', {
+                        matches: Array.from(matches.values())
+                            .filter(match => match.gameState === 'waiting')
+                            .map(match => ({
+                                id: match.id,
+                                playerCount: match.players.length,
+                                hostName: match.players.find(p => p.isHost)?.name || 'Unknown',
+                                isPrivate: match.isPrivate,
+                                hasPassword: match.isPrivate && !!match.password
+                            }))
+                    });
+                }
+            }, 5000); // 5 seconds delay to show results
         } else if (result.success) {
             const match = matches.get(matchId);
             io.to(matchId).emit('word_submitted', {
@@ -570,7 +1051,8 @@ io.on('connection', (socket) => {
                 allRounds: match.allRounds,
                 gameState: match.gameState,
                 currentPlayer: match.gameState === 'playing' ? match.players[match.currentPlayerIndex].name : null,
-                round: match.currentRound
+                round: match.currentRound,
+                players: match.players
             });
         }
     });
@@ -582,11 +1064,38 @@ io.on('connection', (socket) => {
         
         if (result.imposterFound !== undefined) {
             const match = matches.get(matchId);
+            updatePlayerStats(matchId, result.imposterWon, match.imposterSocketId);
             io.to(matchId).emit('game_finished', {
                 imposterWon: result.imposterWon,
                 imposter: match.players.find(p => p.id === match.imposterSocketId).name,
                 word: match.currentWord
             });
+            
+            // Reset match to lobby after a delay
+            setTimeout(() => {
+                resetMatchToLobby(matchId);
+                const resetMatch = matches.get(matchId);
+                if (resetMatch) {
+                    io.to(matchId).emit('return_to_lobby', {
+                        matchId: matchId,
+                        players: resetMatch.players,
+                        gameState: resetMatch.gameState
+                    });
+                    
+                    // Update lobby list
+                    io.emit('lobby_updated', {
+                        matches: Array.from(matches.values())
+                            .filter(match => match.gameState === 'waiting')
+                            .map(match => ({
+                                id: match.id,
+                                playerCount: match.players.length,
+                                hostName: match.players.find(p => p.isHost)?.name || 'Unknown',
+                                isPrivate: match.isPrivate,
+                                hasPassword: match.isPrivate && !!match.password
+                            }))
+                    });
+                }
+            }, 5000); // 5 seconds delay to show results
         } else {
             const match = matches.get(matchId);
             io.to(matchId).emit('vote_updated', {
@@ -601,9 +1110,102 @@ io.on('connection', (socket) => {
         }
     });
     
+    socket.on('leave_match', () => {
+        console.log('User explicitly left match:', socket.id);
+        const matchId = socketToMatch.get(socket.id);
+        const userKey = loggedInUsers.get(socket.id);
+        
+        console.log('Before leave - matchId:', matchId, 'userKey:', userKey);
+        console.log('Before leave - socketToMatch:', socketToMatch.has(socket.id), 'usersInGame:', userKey ? usersInGame.has(userKey) : 'no userKey');
+        
+        // Always clean up all mappings, regardless of match existence
+        if (userKey && usersInGame.has(userKey)) {
+            usersInGame.delete(userKey);
+            console.log('Removed user from usersInGame');
+        }
+        
+        if (socketToMatch.has(socket.id)) {
+            socketToMatch.delete(socket.id);
+            console.log('Removed socket from socketToMatch');
+        }
+        
+        if (socketToPlayer.has(socket.id)) {
+            socketToPlayer.delete(socket.id);
+            console.log('Removed socket from socketToPlayer');
+        }
+        
+        if (matchId) {
+            const match = matches.get(matchId);
+            if (match) {
+                // Find player by socket ID and get their name
+                const leavingPlayer = match.players.find(p => p.id === socket.id);
+                const playerName = leavingPlayer ? leavingPlayer.name : null;
+                
+                // Remove player from match by socket ID
+                match.players = match.players.filter(p => p.id !== socket.id);
+                
+                console.log(`Removed player ${playerName} (${socket.id}) from match. Remaining: ${match.players.length}`);
+                
+                // If host left, assign new host
+                if (match.host === socket.id && match.players.length > 0) {
+                    match.host = match.players[0].id;
+                    match.players[0].isHost = true;
+                    console.log('Transferred host to:', match.players[0].name);
+                }
+                
+                // If no players left, delete match
+                if (match.players.length === 0) {
+                    matches.delete(matchId);
+                    console.log('Deleted empty match:', matchId);
+                } else {
+                    // Notify remaining players about updated player list
+                    io.to(matchId).emit('match_updated', {
+                        players: match.players,
+                        gameState: match.gameState
+                    });
+                    console.log(`Player left match ${matchId}. Remaining players: ${match.players.length}`);
+                }
+                
+                // Update lobby for all users after player left
+                io.emit('lobby_updated', {
+                    matches: Array.from(matches.values())
+                        .filter(match => match.gameState === 'waiting')
+                        .map(match => ({
+                            id: match.id,
+                            playerCount: match.players.length,
+                            hostName: match.players.find(p => p.isHost)?.name || 'Unknown',
+                            isPrivate: match.isPrivate,
+                            hasPassword: match.isPrivate && !!match.password
+                        }))
+                });
+                console.log('Sent lobby update after player left');
+            }
+        }
+        
+        console.log('After leave - socketToMatch:', socketToMatch.has(socket.id), 'usersInGame:', userKey ? usersInGame.has(userKey) : 'no userKey');
+        
+        // Send confirmation to the leaving player
+        socket.emit('match_left');
+    });
+    
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
         const matchId = socketToMatch.get(socket.id);
+        const userKey = loggedInUsers.get(socket.id);
+        
+        // Remove from logged in users
+        loggedInUsers.delete(socket.id);
+        
+        // Remove from active sessions
+        if (userKey && activeSessions.has(userKey)) {
+            activeSessions.delete(userKey);
+        }
+        
+        // Remove from users in game
+        if (userKey && usersInGame.has(userKey)) {
+            usersInGame.delete(userKey);
+        }
+        
         removePlayerFromMatch(socket.id);
         
         // Notify remaining players

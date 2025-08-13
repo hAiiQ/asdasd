@@ -15,35 +15,49 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 25%, #ff9ff3 50%, #54a0ff 75%, #5f27cd 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
+            background: url('/images/background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             min-height: 100vh;
             color: white;
             overflow-x: hidden;
-        }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         
         .container {
             max-width: 900px;
-            margin: 0 auto;
-            padding: 30px 20px;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            justify-content: center;
         }
         
         .card {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
             border-radius: 20px;
             padding: 30px;
-            margin: 25px 0;
+            margin: 10px 0;
             backdrop-filter: blur(20px);
             border: 2px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        /* Larger cards for content-heavy screens */
+        #stats-screen.card,
+        #game-screen.card,
+        #lobby-screen.card {
+            max-width: 800px;
         }
         
         .card:hover {
@@ -69,6 +83,27 @@
             background-clip: text;
             text-shadow: none;
             letter-spacing: -1px;
+        }
+        
+        /* Logo Styles */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+            margin-top: -50px;
+            order: -1;
+        }
+        
+        .game-logo {
+            max-width: 100%;
+            height: auto;
+            max-height: 120px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+            transition: all 0.3s ease;
+        }
+        
+        .game-logo:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
         }
         
         h2 {
@@ -165,18 +200,101 @@
             box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
         }
         
+        .copy-btn {
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            font-size: 0.8em;
+            padding: 4px 8px;
+            margin-left: 8px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+            min-width: auto;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(162, 155, 254, 0.4);
+        }
+        
         .voting-screen {
-            position: sticky;
-            top: 20px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             z-index: 10;
             background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(30, 30, 30, 0.9) 100%);
-            margin-bottom: 20px;
             border: 2px solid rgba(255, 255, 255, 0.1);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .voting-screen:hover {
+            transform: translate(-50%, -50%) !important;
         }
         
         .game-screen {
             position: relative;
             z-index: 1;
+        }
+        
+        .game-players-list {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 200px;
+            max-width: 250px;
+            max-height: 60vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+        }
+        
+        .game-players-list h4 {
+            margin: 0 0 10px 0;
+            color: #fff;
+            font-size: 1em;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%);
+            padding-bottom: 5px;
+        }
+        
+        .game-players-display {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .game-player-item {
+            padding: 6px 10px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .game-player-item.current-player {
+            background: linear-gradient(135deg, rgba(76, 205, 196, 0.3) 0%, rgba(52, 152, 219, 0.2) 100%);
+            border-color: rgba(76, 205, 196, 0.4);
+            font-weight: 600;
         }
         
         .players-list {
@@ -201,12 +319,46 @@
         }
         
         .player.host {
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 165, 0, 0.1) 100%);
-            border-color: rgba(255, 215, 0, 0.4);
+            background: linear-gradient(135deg, hwb(170 0% 0% / 0.2) 0%, rgba(0, 81, 255, 0.1) 100%);
+            border-color: rgba(0, 46, 59, 0.4);
         }
         
         .lobby-section {
             margin-top: 40px;
+        }
+        
+        /* Back to Main Menu Button */
+        .back-to-menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.9) 0%, rgba(192, 57, 43, 0.8) 100%);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            min-width: auto;
+            white-space: nowrap;
+            max-width: 80px;
+            text-align: center;
+        }
+        
+        .back-to-menu-btn:hover {
+            background: linear-gradient(135deg, rgba(231, 76, 60, 1) 0%, rgba(192, 57, 43, 0.9) 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .back-to-menu-btn:active {
+            transform: translateY(0);
         }
         
         .lobby-match {
@@ -312,7 +464,6 @@
         }
         
         .imposter-word {
-            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(238, 90, 36, 0.1) 100%) !important;
             border-color: rgba(255, 107, 107, 0.4) !important;
             color: #ff6b6b !important;
         }
@@ -322,6 +473,7 @@
             padding: 20px;
             border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.15);
+            margin-top: 50px;
             margin-bottom: 20px;
             text-align: center;
         }
@@ -414,18 +566,165 @@
             text-align: center;
         }
         
+        .success {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.9) 0%, rgba(56, 142, 60, 0.9) 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 2px solid rgba(76, 175, 80, 0.5);
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        /* Auth and Stats Styles */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .stat-item h3 {
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        
+        .stat-item p {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin: 0;
+        }
+        
+        a {
+            color: #4ecdc4;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        a:hover {
+            color: #45b7d1;
+        }
+        
+        /* User Profile Styles */
+        .user-profile {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            min-width: 250px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .user-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .profile-info {
+            margin-bottom: 10px;
+        }
+        
+        .profile-info span {
+            font-weight: bold;
+            color: #fff;
+            font-size: 1.1em;
+        }
+        
+        .profile-stats {
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+        }
+        
+        .profile-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .profile-btn {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        .profile-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .logout-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.3) 0%, rgba(238, 90, 36, 0.2) 100%);
+            border-color: rgba(255, 107, 107, 0.5);
+        }
+        
         @media (max-width: 768px) {
             .container {
-                padding: 20px 15px;
+                padding: 15px;
+                min-height: 100vh;
             }
             
-            h1 {
-                font-size: 2.5em;
+            .logo-container {
+                margin-top: -30px;
+                margin-bottom: 15px;
+            }
+            
+            .game-logo {
+                max-height: 80px;
             }
             
             .card {
                 padding: 20px;
-                margin: 15px 0;
+                margin: 8px 0;
+                max-width: 100%;
+            }
+            
+            .user-profile {
+                top: 10px;
+                right: 10px;
+                min-width: 200px;
+                padding: 12px;
+            }
+            
+            .profile-btn {
+                font-size: 0.8em;
+                padding: 6px 8px;
             }
             
             .vote-options {
@@ -439,113 +738,66 @@
     </style>
 </head>
 <body>
-        
-        .player {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .host {
-            background: rgba(255, 215, 0, 0.3);
-        }
-        
-        .game-info {
-            text-align: center;
-            margin: 20px 0;
-            font-size: 1.2em;
-        }
-        
-        .word-display {
-            font-size: 2em;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-        }
-        
-        .imposter-word {
-            color: #ff6b6b;
-        }
-        
-        .words-list {
-            margin: 20px 0;
-        }
-        
-        .word-entry {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-        
+    <!-- User Profile (Top Right) -->
+    <div id="user-profile" class="user-profile hidden">
+        <div class="profile-info">
+            <span id="username-display">Benutzer</span>
+            <div class="profile-stats">
+                🎮 <span id="games-played">0</span> | 🏆 <span id="wins">0</span> | 💔 <span id="losses">0</span>
+            </div>
+        </div>
+        <div class="profile-actions">
+            <button onclick="showStats()" class="profile-btn">📊 Stats</button>
+            <button onclick="logout()" class="profile-btn logout-btn">🚪 Logout</button>
+        </div>
+    </div>
 
-        
-        .current-player {
-            background: rgba(255, 215, 0, 0.3);
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 0.7; }
-            50% { opacity: 1; }
-            100% { opacity: 0.7; }
-        }
-        
-        /* Private Lobby Styles */
-        .private-lobby {
-            border-left: 4px solid #ff6b6b;
-            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
-        }
-        
-        .private-indicator {
-            color: #ff6b6b;
-            font-weight: bold;
-            font-size: 0.9em;
-            margin-left: 8px;
-        }
-        
-        .public-indicator {
-            color: #4ecdc4;
-            font-weight: bold;
-            font-size: 0.9em;
-            margin-left: 8px;
-        }
-        
-        .lobby-match-join {
-            min-width: 120px;
-        }
-    </style>
-</head>
-<body>
     <div class="container">
-        <h1>🕵️ Imposter by hAiQ</h1>
+        <div class="logo-container">
+            <img src="/images/titel.png" alt="Imposter by hAiQ" class="game-logo">
+        </div>
         
+        <!-- Login/Register Screen -->
+        <div id="auth-screen" class="card">
+            <h2>Willkommen!</h2>
+            <p>Melde dich an oder registriere dich, um zu spielen</p>
+            
+            <div id="login-form">
+                <h3>Anmelden</h3>
+                <input type="text" id="login-username" placeholder="Benutzername" maxlength="20">
+                <input type="password" id="login-password" placeholder="Passwort">
+                <button onclick="loginUser()" class="primary-btn">Anmelden</button>
+                <p><a href="#" onclick="showRegisterForm()">Noch kein Account? Registrieren</a></p>
+            </div>
+            
+            <div id="register-form" class="hidden">
+                <h3>Registrieren</h3>
+                <input type="text" id="register-username" placeholder="Benutzername (mind. 3 Zeichen, nur Buchstaben/Zahlen)" maxlength="20">
+                <input type="password" id="register-password" placeholder="Passwort (mind. 3 Zeichen)">
+                <button onclick="registerUser()" class="primary-btn">Registrieren</button>
+                <p><a href="#" onclick="showLoginForm()">Bereits registriert? Anmelden</a></p>
+            </div>
+        </div>
+
         <!-- Main Menu -->
-        <div id="main-menu" class="card">
+        <div id="main-menu" class="card hidden">
             <h2>Willkommen!</h2>
             <button onclick="showCreateMatch()">Neues Spiel erstellen</button>
             <button onclick="showJoinMatch()">Spiel beitreten</button>
-            
-            <!-- Public Matches Lobby -->
-            <div id="lobby-section">
-                <h3>Öffentliche Spiele:</h3>
-                <div id="lobby-matches"></div>
-            </div>
+            <button onclick="showLobby()">Öffentliche Spiele durchsuchen</button>
+        </div>
+        
+        <!-- Lobby Screen -->
+        <div id="lobby-screen" class="card hidden">
+            <h2>🎮 Öffentliche Spiele</h2>
+            <p>Tritt einem laufenden Spiel bei oder warte auf neue Spiele:</p>
+            <div id="lobby-matches"></div>
+            <button onclick="showMainMenu()" class="secondary-btn">Zurück zum Hauptmenü</button>
         </div>
         
         <!-- Create Match -->
         <div id="create-match" class="card hidden">
             <h2>Neues Spiel erstellen</h2>
-            <input type="text" id="host-name" placeholder="Dein Name" maxlength="20">
             <label>
                 <input type="checkbox" id="private-match"> Privates Spiel (mit Passwort)
             </label>
@@ -554,10 +806,53 @@
             <button onclick="showMainMenu()">Zurück</button>
         </div>
         
+        <!-- Stats Screen -->
+        <div id="stats-screen" class="card hidden">
+            <h2>🏆 Deine Statistiken</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3>🎮 Spiele gespielt</h3>
+                    <p id="stats-games-played">0</p>
+                </div>
+                <div class="stat-item">
+                    <h3>🏆 Siege</h3>
+                    <p id="stats-wins">0</p>
+                </div>
+                <div class="stat-item">
+                    <h3>💔 Niederlagen</h3>
+                    <p id="stats-losses">0</p>
+                </div>
+                <div class="stat-item">
+                    <h3>📊 Siegesrate</h3>
+                    <p id="stats-winrate">0%</p>
+                </div>
+                <div class="stat-item">
+                    <h3>🎭 Imposter Siege</h3>
+                    <p id="stats-imposter-wins">0</p>
+                </div>
+                <div class="stat-item">
+                    <h3>🎯 Wörter als Imposter erraten</h3>
+                    <p id="stats-words-guessed">0</p>
+                </div>
+                <div class="stat-item">
+                    <h3>🗳️ Stimmen erhalten</h3>
+                    <p id="stats-votes-received">0</p>
+                </div>
+                <div class="stat-item">
+                    <h3>✅ Richtige Stimmen</h3>
+                    <p id="stats-correct-votes">0</p>
+                </div>
+                <div class="stat-item">
+                    <h3>📅 Registriert seit</h3>
+                    <p id="stats-created-at">-</p>
+                </div>
+            </div>
+            <button onclick="showMainMenu()" class="secondary-btn">Zurück zum Hauptmenü</button>
+        </div>
+        
         <!-- Join Match -->
         <div id="join-match" class="card hidden">
             <h2>Spiel beitreten</h2>
-            <input type="text" id="join-name" placeholder="Dein Name" maxlength="20">
             <input type="text" id="match-id" placeholder="Spiel-ID" maxlength="6">
             <input type="password" id="join-password" placeholder="Passwort (falls erforderlich)">
             <button onclick="joinMatch()" class="primary-btn">Beitreten</button>
@@ -568,16 +863,28 @@
         <div id="waiting-room" class="card hidden">
             <h2>Warteraum</h2>
             <div class="game-info">
-                <p>Spiel-ID: <strong id="current-match-id"></strong></p>
+                <p>Spiel-ID: <strong id="current-match-id"></strong> 
+                   <button onclick="copyMatchLink()" class="copy-btn" title="Link kopieren">📋</button>
+                </p>
                 <p>Mindestens 4 Spieler benötigt zum Starten</p>
             </div>
             <div class="players-list" id="players-list"></div>
             <button id="start-game-btn" onclick="startGame()" class="primary-btn hidden">Spiel starten</button>
             <button onclick="leaveMatch()" class="danger">Spiel verlassen</button>
         </div>
-        
+
+        <!-- Players List (positioned at screen edge, outside of game card) -->
+        <div id="game-players-list" class="game-players-list">
+            <h4>Spieler:</h4>
+            <div id="game-players-display"></div>
+        </div>
+
         <!-- Game Screen -->
         <div id="game-screen" class="card game-screen hidden">
+            <button id="back-to-menu-btn" class="back-to-menu-btn" onclick="returnToMainMenu()">
+                ← Menü
+            </button>
+            
             <div class="game-info">
                 <p>Runde: <span id="current-round">1</span></p>
                 <p>Aktueller Spieler: <span id="current-player"></span></p>
@@ -597,6 +904,10 @@
         
         <!-- Voting Screen -->
         <div id="voting-screen" class="card voting-screen hidden">
+            <button id="back-to-menu-btn-voting" class="back-to-menu-btn" onclick="returnToMainMenu()">
+                ← Menü
+            </button>
+            
             <h2>Abstimmung</h2>
             <div id="continue-voting" class="hidden">
                 <p>Was möchtet ihr machen?</p>
@@ -612,7 +923,9 @@
             </div>
             
             <div class="game-info">
-                <p>Warten auf alle Stimmen...</p>
+                <div id="voting-status">
+                    <p>Warten auf alle Stimmen...</p>
+                </div>
             </div>
         </div>
         
@@ -620,11 +933,16 @@
         <div id="game-finished" class="card hidden">
             <h2>Spiel beendet!</h2>
             <div id="game-result"></div>
-            <button onclick="showMainMenu()">Neues Spiel</button>
+            <p style="margin: 20px 0; color: #ccc;">
+                Ihr werdet automatisch in 5 Sekunden zur Lobby zurückgebracht...
+            </p>
+            <button onclick="returnToLobbyManually()" class="primary-btn">Sofort zur Lobby</button>
+            <button onclick="showMainMenu()">Hauptmenü</button>
         </div>
         
         <!-- Error Messages -->
         <div id="error-message" class="error hidden"></div>
+        <div id="success-message" class="success hidden"></div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -635,13 +953,230 @@
         let isHost = false;
         let playerWord = null;
         let isImposter = false;
+        let hasVoted = false; // Track if user has already voted in current voting round
         let currentPlayerName = null;
         let myPlayerName = null;
+        let currentUser = null;
+        let currentPlayers = []; // Store current players for game screen
+        
+        // URL Routing System
+        function updateURL(matchId = null) {
+            const currentPath = window.location.pathname;
+            if (matchId) {
+                const newPath = `/match/${matchId}`;
+                if (currentPath !== newPath) {
+                    window.history.pushState({ matchId: matchId }, '', newPath);
+                }
+            } else {
+                if (currentPath !== '/' && currentPath !== '') {
+                    window.history.pushState({}, '', '/');
+                }
+            }
+        }
+        
+        function getMatchIdFromURL() {
+            const path = window.location.pathname;
+            const match = path.match(/^\/match\/([A-Z0-9]+)$/);
+            return match ? match[1] : null;
+        }
+        
+        function handleURLNavigation() {
+            const matchId = getMatchIdFromURL();
+            if (matchId && matchId !== currentMatchId) {
+                // Try to join the match from URL
+                if (currentUser) {
+                    console.log('Attempting to join match from URL:', matchId);
+                    joinMatchById(matchId);
+                } else {
+                    // Store match ID to join after login
+                    sessionStorage.setItem('pendingMatchId', matchId);
+                }
+            } else if (!matchId && currentMatchId) {
+                // User navigated back to home, leave current match
+                leaveMatch();
+            }
+        }
+        
+        // Handle browser back/forward navigation
+        window.addEventListener('popstate', function(event) {
+            handleURLNavigation();
+        });
+        
+        // Check if user is logged in on page load
+        window.onload = function() {
+            const savedUser = localStorage.getItem('imposterUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                myPlayerName = currentUser.username;
+                
+                // Automatically login with socket
+                socket.emit('user_login', { 
+                    username: currentUser.username, 
+                    password: localStorage.getItem('imposterPassword') || '' 
+                });
+                
+                showUserInterface();
+                
+                // Check URL for match ID after user is set
+                setTimeout(() => {
+                    handleURLNavigation();
+                }, 100);
+            } else {
+                showAuthScreen();
+                // Still check URL in case user needs to login first
+                handleURLNavigation();
+            }
+        };
+        
+        // Auth Functions
+        function showAuthScreen() {
+            hideAllScreens();
+            document.getElementById('user-profile').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+        }
+        
+        function showLoginForm() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('register-form').classList.add('hidden');
+        }
+        
+        function showRegisterForm() {
+            document.getElementById('register-form').classList.remove('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+        }
+        
+        async function registerUser() {
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            
+            if (!username || !password) {
+                showError('Bitte fülle alle Felder aus');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess(result.message);
+                    showLoginForm();
+                    document.getElementById('login-username').value = username;
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('Registrierung fehlgeschlagen: ' + error.message);
+            }
+        }
+        
+        async function loginUser() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            if (!username || !password) {
+                showError('Bitte fülle alle Felder aus');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentUser = result.user;
+                    myPlayerName = result.user.username;
+                    localStorage.setItem('imposterUser', JSON.stringify(result.user));
+                    localStorage.setItem('imposterPassword', password); // Store password for socket login
+                    
+                    // Inform socket about login
+                    socket.emit('user_login', { 
+                        username: username, 
+                        password: password 
+                    });
+                    
+                    showUserInterface();
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                showError('Login fehlgeschlagen');
+            }
+        }
+        
+        function logout() {
+            currentUser = null;
+            myPlayerName = null;
+            localStorage.removeItem('imposterUser');
+            localStorage.removeItem('imposterPassword');
+            document.getElementById('user-profile').classList.add('hidden');
+            showAuthScreen();
+        }
+        
+        function showUserInterface() {
+            hideAllScreens();
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+            document.getElementById('user-profile').classList.remove('hidden');
+            
+            // Update user profile display
+            document.getElementById('username-display').textContent = currentUser.username;
+            updateStatsDisplay(currentUser.stats);
+        }
+        
+        function updateStatsDisplay(stats) {
+            document.getElementById('games-played').textContent = stats.gamesPlayed;
+            document.getElementById('wins').textContent = stats.wins;
+            document.getElementById('losses').textContent = stats.losses;
+        }
+        
+        function showStats() {
+            hideAllScreens();
+            document.getElementById('stats-screen').classList.remove('hidden');
+            
+            const stats = currentUser.stats;
+            document.getElementById('stats-games-played').textContent = stats.gamesPlayed;
+            document.getElementById('stats-wins').textContent = stats.wins;
+            document.getElementById('stats-losses').textContent = stats.losses;
+            document.getElementById('stats-imposter-wins').textContent = stats.imposterWins;
+            document.getElementById('stats-words-guessed').textContent = stats.wordsGuessedAsImposter;
+            document.getElementById('stats-votes-received').textContent = stats.totalVotesReceived;
+            document.getElementById('stats-correct-votes').textContent = stats.correctVotes;
+            
+            const winrate = stats.gamesPlayed > 0 ? ((stats.wins / stats.gamesPlayed) * 100).toFixed(1) : 0;
+            document.getElementById('stats-winrate').textContent = winrate + '%';
+            
+            const createdDate = new Date(stats.createdAt).toLocaleDateString('de-DE');
+            document.getElementById('stats-created-at').textContent = createdDate;
+        }
         
         // UI Functions
         function showMainMenu() {
             hideAllScreens();
             document.getElementById('main-menu').classList.remove('hidden');
+            // Show user profile if logged in
+            if (currentUser) {
+                document.getElementById('user-profile').classList.remove('hidden');
+            }
         }
         
         function showCreateMatch() {
@@ -654,12 +1189,206 @@
             document.getElementById('join-match').classList.remove('hidden');
         }
         
+        function showLobby() {
+            hideAllScreens();
+            document.getElementById('lobby-screen').classList.remove('hidden');
+            // Show user profile if logged in
+            if (currentUser) {
+                document.getElementById('user-profile').classList.remove('hidden');
+            }
+        }
+        
         function hideAllScreens() {
-            const screens = ['main-menu', 'create-match', 'join-match', 'waiting-room', 'game-screen', 'voting-screen', 'game-finished'];
+            const screens = ['main-menu', 'create-match', 'join-match', 'lobby-screen', 'waiting-room', 'game-screen', 'voting-screen', 'game-finished', 'stats-screen'];
             screens.forEach(screen => {
                 document.getElementById(screen).classList.add('hidden');
             });
             hideError();
+            hideGamePlayersList(); // Hide players list when switching screens
+        }
+        
+        function showGamePlayersList() {
+            const playersList = document.getElementById('game-players-list');
+            if (playersList) {
+                playersList.style.display = 'block';
+            }
+        }
+        
+        function hideGamePlayersList() {
+            const playersList = document.getElementById('game-players-list');
+            if (playersList) {
+                playersList.style.display = 'none';
+            }
+        }
+        
+        function updateGamePlayersList(players, currentPlayerName = null) {
+            console.log('updateGamePlayersList called with:', players.length, 'players, current:', currentPlayerName);
+            const playersDisplay = document.getElementById('game-players-display');
+            if (!playersDisplay) {
+                console.error('game-players-display element not found');
+                return;
+            }
+            
+            playersDisplay.innerHTML = '';
+            
+            if (!players || !Array.isArray(players)) {
+                console.warn('No valid players array provided');
+                return;
+            }
+            
+            // Update header to show player count
+            const header = document.querySelector('.game-players-list h4');
+            if (header) {
+                header.textContent = `Spieler (${players.length}/8):`;
+            }
+            
+            players.forEach((player, index) => {
+                const playerElement = document.createElement('div');
+                playerElement.className = 'game-player-item';
+                
+                // Highlight current player
+                if (currentPlayerName && player.name === currentPlayerName) {
+                    playerElement.classList.add('current-player');
+                }
+                
+                // Mark host
+                if (player.isHost) {
+                    playerElement.classList.add('host');
+                    playerElement.textContent = `${player.name} (Host)`;
+                } else {
+                    playerElement.textContent = player.name;
+                }
+                
+                // Add title attribute for long names (tooltip)
+                if (player.name.length > 12) {
+                    playerElement.title = player.name;
+                }
+                
+                playersDisplay.appendChild(playerElement);
+            });
+            
+            console.log('Players list updated with', players.length, 'players');
+        }
+        
+        // Test function to show players list
+        function testPlayersDisplay() {
+            const testPlayers = [
+                { name: 'Test1', isHost: true },
+                { name: 'Test2', isHost: false },
+                { name: 'Test3', isHost: false },
+                { name: 'Test4', isHost: false },
+                { name: 'Test5', isHost: false },
+                { name: 'Test6', isHost: false },
+                { name: 'Test7', isHost: false },
+                { name: 'Test8', isHost: false }
+            ];
+            console.log('Showing test players (8 players):', testPlayers);
+            updateGamePlayersList(testPlayers, 'Test2');
+        }
+        
+        // Function to test 8 players manually (call from console)
+        window.test8Players = function() {
+            const eightPlayers = [
+                { name: 'PlayerOne', isHost: true },
+                { name: 'PlayerTwo', isHost: false },
+                { name: 'PlayerThree', isHost: false },
+                { name: 'PlayerFour', isHost: false },
+                { name: 'PlayerFive', isHost: false },
+                { name: 'PlayerSix', isHost: false },
+                { name: 'PlayerSeven', isHost: false },
+                { name: 'PlayerEight', isHost: false }
+            ];
+            console.log('Testing 8 players layout:', eightPlayers);
+            updateGamePlayersList(eightPlayers, 'PlayerThree');
+        };
+        
+        // Debug function to check if element exists
+        function checkPlayersListElement() {
+            const element = document.getElementById('game-players-list');
+            const display = document.getElementById('game-players-display');
+            console.log('Players list element:', element);
+            console.log('Players display element:', display);
+            if (element) {
+                console.log('Element style:', window.getComputedStyle(element));
+            }
+        }
+        
+        function updateMatchDisplay(match) {
+            if (match.gameState === 'waiting') {
+                // Show waiting room
+                hideAllScreens();
+                document.getElementById('waiting-room').classList.remove('hidden');
+                document.getElementById('user-profile').classList.remove('hidden');
+                
+                // Update waiting room display
+                const playersDiv = document.getElementById('waiting-players');
+                playersDiv.innerHTML = '';
+                
+                match.players.forEach(player => {
+                    const playerElement = document.createElement('div');
+                    playerElement.className = 'player-item';
+                    if (player.isHost) {
+                        playerElement.innerHTML = `<strong>${player.name}</strong> (Host)`;
+                    } else {
+                        playerElement.innerHTML = player.name;
+                    }
+                    playersDiv.appendChild(playerElement);
+                });
+                
+                // Show/hide start button for host
+                const startButton = document.getElementById('start-game');
+                const isHost = match.players.some(p => p.name === myPlayerName && p.isHost);
+                if (isHost) {
+                    startButton.style.display = 'block';
+                } else {
+                    startButton.style.display = 'none';
+                }
+                
+            } else if (match.gameState === 'playing' || match.gameState === 'voting_continue' || match.gameState === 'voting_imposter') {
+                // Show game screen
+                hideAllScreens();
+                document.getElementById('game-screen').classList.remove('hidden');
+                document.getElementById('user-profile').classList.remove('hidden');
+                showGamePlayersList(); // Show players list when game starts
+                
+                // Update players list in game screen (top left)
+                updateGamePlayersList(match.players, match.currentPlayer);
+                
+                // Update old players list (if it exists)
+                const playersDiv = document.getElementById('game-players');
+                if (playersDiv) {
+                    playersDiv.innerHTML = '';
+                    
+                    match.players.forEach(player => {
+                        const playerElement = document.createElement('div');
+                        playerElement.className = 'player-item';
+                        playerElement.textContent = player.name;
+                        playersDiv.appendChild(playerElement);
+                    });
+                }
+                
+                // Show voting screen if in voting state
+                if (match.gameState === 'voting_continue' || match.gameState === 'voting_imposter') {
+                    hasVoted = false; // Reset voting flag
+                    enableVotingButtons(); // Enable buttons
+                    
+                    // Hide game screen and show only voting screen
+                    document.getElementById('game-screen').classList.add('hidden');
+                    hideGamePlayersList();
+                    document.getElementById('voting-screen').classList.remove('hidden');
+                    if (match.gameState === 'voting_continue') {
+                        document.getElementById('continue-voting').classList.remove('hidden');
+                        document.getElementById('imposter-voting').classList.add('hidden');
+                    } else {
+                        document.getElementById('continue-voting').classList.add('hidden');
+                        document.getElementById('imposter-voting').classList.remove('hidden');
+                        updateVotingPlayers(match.players);
+                    }
+                    
+                    // Update voting status when showing match
+                    updateVotingStatus(match.players, match.votes || []);
+                }
+            }
         }
         
         function showError(message) {
@@ -667,6 +1396,28 @@
             errorDiv.textContent = message;
             errorDiv.classList.remove('hidden');
             setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            if (successDiv) {
+                successDiv.textContent = message;
+                successDiv.classList.remove('hidden');
+                setTimeout(() => successDiv.classList.add('hidden'), 5000);
+            } else {
+                // Fallback: use error div with green styling
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = message;
+                errorDiv.style.background = 'linear-gradient(135deg, rgba(76, 175, 80, 0.9) 0%, rgba(56, 142, 60, 0.9) 100%)';
+                errorDiv.style.borderColor = 'rgba(76, 175, 80, 0.5)';
+                errorDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    errorDiv.classList.add('hidden');
+                    // Reset to error styling
+                    errorDiv.style.background = '';
+                    errorDiv.style.borderColor = '';
+                }, 5000);
+            }
         }
         
         function hideError() {
@@ -685,45 +1436,66 @@
         });
         
         // Game Functions
+        let isCreatingMatch = false; // Prevent multiple simultaneous create attempts
+        
         function createMatch() {
-            const playerName = document.getElementById('host-name').value.trim();
+            if (!currentUser) {
+                showError('Du musst eingeloggt sein');
+                return;
+            }
+            
+            if (isCreatingMatch) {
+                return;
+            }
+            
+            isCreatingMatch = true;
+            
             const isPrivate = document.getElementById('private-match').checked;
             const password = document.getElementById('match-password').value;
             
-            if (!playerName) {
-                showError('Bitte gib deinen Namen ein');
-                return;
-            }
-            
-            myPlayerName = playerName; // Store player name globally
-            
             socket.emit('create_match', {
-                playerName: playerName,
                 isPrivate: isPrivate,
                 password: isPrivate ? password : null
             });
+            
+            console.log('create_match event sent to server');
+            
+            // Reset flag after a timeout
+            setTimeout(() => {
+                if (isCreatingMatch) {
+                    console.log('Match creation timeout, resetting flag');
+                    isCreatingMatch = false;
+                }
+            }, 2000);
         }
         
         function joinMatch() {
-            const playerName = document.getElementById('join-name').value.trim();
-            const matchId = document.getElementById('match-id').value.trim().toUpperCase();
-            const password = document.getElementById('join-password').value;
-            
-            if (!playerName || !matchId) {
-                showError('Bitte fülle alle Felder aus');
+            if (!currentUser) {
+                showError('Du musst eingeloggt sein');
                 return;
             }
             
-            myPlayerName = playerName; // Store player name globally
+            const matchId = document.getElementById('match-id').value.trim().toUpperCase();
+            const password = document.getElementById('join-password').value;
+            
+            if (!matchId) {
+                showError('Bitte gib die Spiel-ID ein');
+                return;
+            }
             
             socket.emit('join_match', {
-                playerName: playerName,
                 matchId: matchId,
                 password: password
             });
         }
         
         function startGame() {
+            // Check if enough players
+            if (!currentPlayers || currentPlayers.length < 4) {
+                showError('Mindestens 4 Spieler werden benötigt um zu starten');
+                return;
+            }
+            
             socket.emit('start_game');
         }
         
@@ -734,58 +1506,264 @@
                 return;
             }
             
+            // Store the word input in case we need to show the section again on error
+            const wordInput = document.getElementById('word-input');
+            const wordInputSection = document.getElementById('word-input-section');
+            
             socket.emit('submit_word', { word: word });
-            document.getElementById('word-input').value = '';
-            document.getElementById('word-input-section').classList.add('hidden');
+            wordInput.value = '';
+            wordInputSection.classList.add('hidden');
         }
         
         function vote(voteType, targetPlayerId = null) {
+            // Check if user has already voted
+            if (hasVoted) {
+                showError('Du hast bereits abgestimmt!');
+                return;
+            }
+            
+            // Immediately mark user as having voted to prevent double-voting
+            hasVoted = true;
+            
+            // Hide voting options immediately to prevent further voting
+            document.getElementById('continue-voting').classList.add('hidden');
+            document.getElementById('imposter-voting').classList.add('hidden');
+            
             socket.emit('submit_vote', {
                 voteType: voteType,
                 targetPlayerId: targetPlayerId
             });
             
-            // Hide voting options after voting
-            document.getElementById('continue-voting').classList.add('hidden');
-            document.getElementById('imposter-voting').classList.add('hidden');
+            // Show feedback that vote was submitted
+            showSuccess('Deine Stimme wurde abgegeben!');
+        }
+        
+        function disableVotingButtons() {
+            // Disable continue voting buttons
+            const continueButtons = document.querySelectorAll('#continue-voting button');
+            continueButtons.forEach(button => {
+                button.disabled = true;
+                button.style.opacity = '0.5';
+                button.style.cursor = 'not-allowed';
+            });
+            
+            // Disable imposter voting buttons
+            const imposterButtons = document.querySelectorAll('#imposter-voting button');
+            imposterButtons.forEach(button => {
+                button.disabled = true;
+                button.style.opacity = '0.5';
+                button.style.cursor = 'not-allowed';
+            });
+        }
+        
+        function enableVotingButtons() {
+            // Enable continue voting buttons
+            const continueButtons = document.querySelectorAll('#continue-voting button');
+            continueButtons.forEach(button => {
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+            });
+            
+            // Enable imposter voting buttons
+            const imposterButtons = document.querySelectorAll('#imposter-voting button');
+            imposterButtons.forEach(button => {
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+            });
+        }
+        
+        function updateVotingStatus(players, votes) {
+            const votingStatus = document.getElementById('voting-status');
+            if (!votingStatus) return;
+            
+            if (!players || !Array.isArray(players)) return;
+            
+            const votedPlayerIds = votes ? votes.map(v => v.playerId) : [];
+            const voted = [];
+            const notVoted = [];
+            
+            players.forEach(player => {
+                if (votedPlayerIds.includes(player.id)) {
+                    voted.push(player.name);
+                } else {
+                    notVoted.push(player.name);
+                }
+            });
+            
+            let statusHTML = '<div style="text-align: left;">';
+            
+            if (voted.length > 0) {
+                statusHTML += '<p style="color: #90EE90; margin: 5px 0;"><strong>✅ Bereits gevotet:</strong></p>';
+                statusHTML += '<p style="color: #90EE90; margin: 0 0 10px 20px;">' + voted.join(', ') + '</p>';
+            }
+            
+            if (notVoted.length > 0) {
+                statusHTML += '<p style="color: #FFB6C1; margin: 5px 0;"><strong>⏳ Warten auf:</strong></p>';
+                statusHTML += '<p style="color: #FFB6C1; margin: 0 0 10px 20px;">' + notVoted.join(', ') + '</p>';
+            }
+            
+            if (notVoted.length === 0) {
+                statusHTML += '<p style="color: #90EE90; margin: 10px 0;"><strong>🎉 Alle haben gevotet!</strong></p>';
+            }
+            
+            statusHTML += '</div>';
+            votingStatus.innerHTML = statusHTML;
         }
         
         function leaveMatch() {
-            socket.disconnect();
-            socket.connect();
-            showMainMenu();
+            // Immediately reset local state for better UX
+            console.log('leaveMatch() called - immediately resetting client state');
+            
+            // Reset all local state immediately
             currentMatchId = null;
             isHost = false;
-            myPlayerName = null; // Reset player name
+            myPlayerName = null;
+            currentPlayers = [];
+            window.createdThisMatch = false;
+            isCreatingMatch = false;
+            
+            // Clear URL and go to main menu immediately
+            updateURL();
+            hideAllScreens();
+            hideGamePlayersList();
+            showMainMenu();
+            
+            // Show immediate feedback
+            showSuccess('Du hast die Lobby verlassen');
+            
+            // Send leave event to server (but don't wait for response)
+            socket.emit('leave_match');
+        }
+        
+        function returnToMainMenu() {
+            // Confirm the user wants to leave the game
+            if (confirm('Möchtest du wirklich das Spiel verlassen und zum Hauptmenü zurückkehren?')) {
+                leaveMatch();
+            }
+        }
+        
+        function returnToLobbyManually() {
+            if (currentMatchId) {
+                hideAllScreens();
+                document.getElementById('waiting-room').classList.remove('hidden');
+                document.getElementById('user-profile').classList.remove('hidden');
+                hideGamePlayersList();
+                
+                // Update players list if we have current players
+                if (currentPlayers && currentPlayers.length > 0) {
+                    updatePlayersList(currentPlayers);
+                }
+            } else {
+                showMainMenu();
+            }
+        }
+        
+        // Helper function to manage start game button visibility
+        function updateStartGameButton() {
+            const startBtn = document.getElementById('start-game-btn');
+            console.log('updateStartGameButton called - isHost:', isHost, 'currentPlayers length:', currentPlayers ? currentPlayers.length : 'undefined');
+            
+            // Show button if user is host (regardless of player count for now)
+            // Button will be enabled/disabled based on player count
+            if (isHost) {
+                console.log('Showing start button (user is host)');
+                startBtn.classList.remove('hidden');
+                
+                // Enable/disable based on player count
+                if (currentPlayers && currentPlayers.length >= 4) {
+                    startBtn.disabled = false;
+                    startBtn.textContent = 'Spiel starten';
+                } else {
+                    startBtn.disabled = true;
+                    startBtn.textContent = 'Warte auf Spieler (min. 4)';
+                }
+            } else {
+                console.log('Hiding start button (user is not host)');
+                startBtn.classList.add('hidden');
+                startBtn.disabled = false;
+                startBtn.textContent = 'Spiel starten';
+            }
         }
         
         // Socket Events
         socket.on('match_created', (data) => {
+            console.log('match_created event received:', data);
+            console.log('Current state - isCreatingMatch:', isCreatingMatch, 'currentMatchId:', currentMatchId);
+            isCreatingMatch = false; // Reset the creation flag
             currentMatchId = data.matchId;
             isHost = true;
+            currentPlayers = [{ name: myPlayerName || getPlayerName(), isHost: true }]; // Add ourselves to the players list
+            updateURL(data.matchId); // Update URL when match is created
             document.getElementById('current-match-id').textContent = data.matchId;
             hideAllScreens();
             document.getElementById('waiting-room').classList.remove('hidden');
+            console.log('Set isHost to true, calling updateStartGameButton');
+            
+            // Set a flag to remember we created this match
+            window.createdThisMatch = true;
+            
+            updateStartGameButton(); // Update button visibility
+            updatePlayersList(currentPlayers); // Update the players list display
+            
+            console.log('match_created processing complete, should now be in waiting room');
         });
         
         socket.on('match_joined', (data) => {
             currentMatchId = data.matchId;
+            updateURL(data.matchId); // Update URL when match is joined
             document.getElementById('current-match-id').textContent = data.matchId;
             hideAllScreens();
             document.getElementById('waiting-room').classList.remove('hidden');
+            
+            // Initially hide start button - will be shown by match_updated if user is host
+            document.getElementById('start-game-btn').classList.add('hidden');
         });
         
         socket.on('match_updated', (data) => {
+            // Only process if we're currently in a match
+            if (!currentMatchId) {
+                return;
+            }
+            
+            currentPlayers = data.players || []; // Store players globally
             updatePlayersList(data.players);
             
-            if (isHost && data.players.length >= 4) {
-                document.getElementById('start-game-btn').classList.remove('hidden');
+            // Check if current user became the host
+            const playerName = myPlayerName || getPlayerName();
+            if (playerName) {
+                const currentPlayer = data.players.find(p => p.name === playerName);
+                if (currentPlayer) {
+                    const wasHost = isHost;
+                    
+                    // If we created this match, we should always be host (unless we left and rejoined)
+                    if (window.createdThisMatch && currentPlayer.isHost) {
+                        isHost = true;
+                    } else {
+                        isHost = currentPlayer.isHost;
+                    }
+                    
+                    // Show notification if user became host
+                    if (!wasHost && isHost) {
+                        showSuccess('Du bist jetzt der Host!');
+                    }
+                } else {
+                }
             } else {
-                document.getElementById('start-game-btn').classList.add('hidden');
             }
+            
+            // Also update the game players list if we're in a game
+            if (data.gameState === 'playing' || data.gameState === 'voting_continue' || data.gameState === 'voting_imposter') {
+                updateGamePlayersList(data.players, data.currentPlayer || currentPlayerName);
+            }
+            
+            // Show/hide start button based on host status and player count
+            updateStartGameButton();
         });
         
         socket.on('game_started', (data) => {
+            console.log('game_started event received:', data);
             playerWord = data.word;
             isImposter = data.isImposter;
             currentPlayerName = data.currentPlayer;
@@ -800,20 +1778,86 @@
             
             hideAllScreens();
             document.getElementById('game-screen').classList.remove('hidden');
+            showGamePlayersList(); // Show players list when game starts
+            
+            // Debug: Check if element exists
+            setTimeout(() => {
+                checkPlayersListElement();
+            }, 100);
+            
+            // Update players list in game screen
+            let playersToShow = data.players;
+            if (!playersToShow || !Array.isArray(playersToShow)) {
+                console.log('No players in game_started, using stored players:', currentPlayers);
+                playersToShow = currentPlayers;
+            }
+            
+            if (playersToShow && Array.isArray(playersToShow) && playersToShow.length > 0) {
+                console.log('Real players data found:', playersToShow);
+                updateGamePlayersList(playersToShow, data.currentPlayer);
+            } else {
+                // Fallback: show test data
+                console.warn('No valid players data available, showing test data');
+                setTimeout(() => {
+                    testPlayersDisplay();
+                }, 200);
+            }
             
             // Show input if it's player's turn
             if (data.currentPlayer === getPlayerName()) {
                 document.getElementById('word-input-section').classList.remove('hidden');
+            } else {
+                document.getElementById('word-input-section').classList.add('hidden');
             }
         });
         
         socket.on('word_submitted', (data) => {
+            console.log('word_submitted event received:', data);
             // Update with all rounds data from server
             if (data.allRounds) {
                 allRounds = data.allRounds;
             }
+            
+            // Check if voting has started and hide game screen immediately
+            if (data.gameState === 'voting_continue' || data.gameState === 'voting_imposter') {
+                // This is a new voting round starting, reset the voting flag
+                hasVoted = false;
+                
+                document.getElementById('game-screen').classList.add('hidden');
+                hideGamePlayersList();
+                document.getElementById('voting-screen').classList.remove('hidden');
+                
+                if (data.gameState === 'voting_continue') {
+                    document.getElementById('continue-voting').classList.remove('hidden');
+                    document.getElementById('imposter-voting').classList.add('hidden');
+                } else {
+                    document.getElementById('continue-voting').classList.add('hidden');
+                    document.getElementById('imposter-voting').classList.remove('hidden');
+                    updateVotingPlayers(data.players);
+                }
+                
+                // Initialize voting status (no votes yet at start)
+                updateVotingStatus(data.players, []);
+                
+                return; // Don't continue with normal word display logic
+            }
+            
             updateWordsList(data.words, data.round);
             currentPlayerName = data.currentPlayer;
+            
+            // Update players list with current player highlight
+            let playersToShow = data.players;
+            if (!playersToShow || !Array.isArray(playersToShow)) {
+                console.log('No players in word_submitted, using stored players:', currentPlayers);
+                playersToShow = currentPlayers;
+            }
+            
+            if (playersToShow && Array.isArray(playersToShow) && playersToShow.length > 0) {
+                console.log('Updating players list with real data:', playersToShow);
+                updateGamePlayersList(playersToShow, data.currentPlayer);
+            } else {
+                console.warn('No valid players data available for word_submitted');
+            }
             
             if (data.currentPlayer) {
                 document.getElementById('current-player').textContent = data.currentPlayer;
@@ -840,16 +1884,48 @@
             }
             
             if (data.gameState === 'voting_imposter') {
+                // Only reset voting flag and enable buttons if user hasn't voted yet
+                if (!hasVoted) {
+                    enableVotingButtons(); // Enable buttons for new voting round
+                }
+                
                 document.getElementById('continue-voting').classList.add('hidden');
-                document.getElementById('imposter-voting').classList.remove('hidden');
-                updateVotingPlayers(data.players);
-                // Keep game screen visible during imposter voting too
-                document.getElementById('game-screen').classList.remove('hidden');
+                if (!hasVoted) {
+                    document.getElementById('imposter-voting').classList.remove('hidden');
+                    updateVotingPlayers(data.players);
+                }
+                // Hide game screen during voting and only show voting screen
+                document.getElementById('game-screen').classList.add('hidden');
+                hideGamePlayersList(); // Hide players list during voting
                 document.getElementById('voting-screen').classList.remove('hidden');
+                
+                // Update voting status
+                updateVotingStatus(data.players, data.votes);
+                
+            } else if (data.gameState === 'voting_continue') {
+                // Only reset voting flag and enable buttons if user hasn't voted yet
+                if (!hasVoted) {
+                    enableVotingButtons(); // Enable buttons for new voting round
+                }
+                
+                if (!hasVoted) {
+                    document.getElementById('continue-voting').classList.remove('hidden');
+                }
+                document.getElementById('imposter-voting').classList.add('hidden');
+                // Hide game screen during voting and only show voting screen
+                document.getElementById('game-screen').classList.add('hidden');
+                hideGamePlayersList(); // Hide players list during voting
+                document.getElementById('voting-screen').classList.remove('hidden');
+                
+                // Update voting status
+                updateVotingStatus(data.players, data.votes);
             } else if (data.gameState === 'playing') {
+                // Reset voting flag when new game round starts
+                hasVoted = false;
                 // Hide voting screen and show only game screen for new round
                 document.getElementById('voting-screen').classList.add('hidden');
                 document.getElementById('game-screen').classList.remove('hidden');
+                showGamePlayersList(); // Show players list for new round
                 updateWordsList(data.words, data.round);
                 document.getElementById('current-player').textContent = data.currentPlayer;
                 document.getElementById('current-round').textContent = data.round;
@@ -880,16 +1956,125 @@
             }
         });
         
+        socket.on('return_to_lobby', (data) => {
+            console.log('Returning to lobby:', data);
+            
+            // Update current players list
+            currentPlayers = data.players || [];
+            
+            // Check if current user is host
+            const currentPlayer = data.players.find(p => p.name === myPlayerName || p.name === getPlayerName());
+            if (currentPlayer) {
+                isHost = currentPlayer.isHost;
+            }
+            
+            // Reset game state
+            playerWord = null;
+            isImposter = false;
+            currentPlayerName = null;
+            
+            // Hide game screens and show waiting room
+            hideAllScreens();
+            hideGamePlayersList();
+            document.getElementById('waiting-room').classList.remove('hidden');
+            document.getElementById('user-profile').classList.remove('hidden');
+            
+            // Update players list in waiting room
+            updatePlayersList(data.players);
+            
+            // Show start button if user is host
+            updateStartGameButton();
+            
+            showSuccess('Spiel beendet! Ihr seid zurück in der Lobby.');
+        });
+        
+        socket.on('match_left', () => {
+            console.log('Match left confirmation received from server');
+            // Client state is already reset, this is just confirmation
+        });
+        
         socket.on('error', (data) => {
             showError(data.message);
+            isCreatingMatch = false; // Reset creation flag on error
+            
+            // If it's a word submission error, show the input section again
+            if (data.message.includes('gesuchte Wort') || data.message.includes('target word')) {
+                const currentPlayerName = getPlayerName();
+                if (document.getElementById('current-player').textContent === currentPlayerName) {
+                    document.getElementById('word-input-section').classList.remove('hidden');
+                }
+            }
+            
+            // If joining via URL failed, clear the URL
+            const urlMatchId = getMatchIdFromURL();
+            if (urlMatchId && data.message.includes('Match') && (data.message.includes('gefunden') || data.message.includes('found'))) {
+                updateURL(); // Clear URL if match not found
+            }
         });
         
         // Helper Functions
+        function copyMatchLink() {
+            if (!currentMatchId) {
+                showError('Keine aktive Match-ID');
+                return;
+            }
+            
+            const matchUrl = `${window.location.origin}/match/${currentMatchId}`;
+            
+            // Try modern clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(matchUrl).then(() => {
+                    showSuccess('Match-Link kopiert!');
+                }).catch(err => {
+                    // Fallback method
+                    fallbackCopyText(matchUrl);
+                });
+            } else {
+                // Fallback method for older browsers
+                fallbackCopyText(matchUrl);
+            }
+        }
+        
+        function fallbackCopyText(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showSuccess('Match-Link kopiert!');
+                } else {
+                    showError('Kopieren fehlgeschlagen');
+                }
+            } catch (err) {
+                showError('Kopieren fehlgeschlagen');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
         function getPlayerName() {
             if (myPlayerName) {
                 return myPlayerName;
             }
-            return document.getElementById('host-name').value || document.getElementById('join-name').value;
+            
+            const hostNameInput = document.getElementById('host-name');
+            const joinNameInput = document.getElementById('join-name');
+            
+            if (hostNameInput && hostNameInput.value) {
+                return hostNameInput.value;
+            }
+            
+            if (joinNameInput && joinNameInput.value) {
+                return joinNameInput.value;
+            }
+            
+            return null;
         }
         
         function updatePlayersList(players) {
@@ -1005,29 +2190,37 @@
         }
         
         function quickJoinMatch(matchId) {
-            const playerName = prompt('Dein Name:');
-            if (!playerName || !playerName.trim()) {
-                showError('Bitte gib einen Namen ein');
+            if (!currentUser) {
+                showError('Du musst eingeloggt sein');
                 return;
             }
 
-            myPlayerName = playerName.trim(); // Store player name globally
-
             socket.emit('join_match', {
-                playerName: playerName.trim(),
+                matchId: matchId,
+                password: ''
+            });
+        }
+        
+        function joinMatchById(matchId) {
+            if (!currentUser) {
+                showError('Du musst eingeloggt sein');
+                return;
+            }
+            
+            console.log('Trying to join match from URL:', matchId);
+            
+            // Try to join without password first
+            socket.emit('join_match', {
                 matchId: matchId,
                 password: ''
             });
         }
         
         function joinMatchWithPassword(matchId, isPrivate) {
-            const playerName = prompt('Dein Name:');
-            if (!playerName || !playerName.trim()) {
-                showError('Bitte gib einen Namen ein');
+            if (!currentUser) {
+                showError('Du musst eingeloggt sein');
                 return;
             }
-            
-            myPlayerName = playerName.trim(); // Store player name globally
             
             let password = '';
             if (isPrivate) {
@@ -1036,11 +2229,99 @@
             }
             
             socket.emit('join_match', {
-                playerName: playerName.trim(),
                 matchId: matchId,
                 password: password
             });
-        }        // Socket Events for Lobby
+        }        
+        
+        // Socket Events for Auth
+        socket.on('login_result', (data) => {
+            if (data.success) {
+                console.log('Socket login successful');
+                
+                // Check if user was in a match and restore it
+                if (data.currentMatch) {
+                    console.log('Restoring previous match:', data.currentMatch.id);
+                    currentMatchId = data.currentMatch.id;
+                    updateURL(data.currentMatch.id); // Update URL when restoring match
+                    hideAllScreens();
+                    
+                    // Check if it's an active game or waiting room
+                    if (data.currentMatch.gameState === 'waiting') {
+                        // Restore to waiting room/lobby
+                        document.getElementById('waiting-room').classList.remove('hidden');
+                        document.getElementById('user-profile').classList.remove('hidden');
+                        currentPlayers = data.currentMatch.players || [];
+                        updatePlayersList(data.currentMatch.players);
+                        
+                        // Check if user is host and update status
+                        const userPlayer = data.currentMatch.players.find(p => p.name === myPlayerName);
+                        if (userPlayer && userPlayer.isHost) {
+                            isHost = true;
+                            console.log('You are the host of this match');
+                        } else {
+                            isHost = false;
+                        }
+                        updateStartGameButton();
+                    } else {
+                        // Restore to active game
+                        document.getElementById('user-profile').classList.remove('hidden');
+                        
+                        // Show voting screen if in voting state
+                        if (data.currentMatch.gameState === 'voting_continue' || data.currentMatch.gameState === 'voting_imposter') {
+                            hasVoted = false; // Reset voting flag when rejoining
+                            enableVotingButtons(); // Enable buttons when rejoining
+                            
+                            // Hide game screen and show only voting screen
+                            document.getElementById('game-screen').classList.add('hidden');
+                            hideGamePlayersList();
+                            document.getElementById('voting-screen').classList.remove('hidden');
+                            if (data.currentMatch.gameState === 'voting_continue') {
+                                document.getElementById('continue-voting').classList.remove('hidden');
+                                document.getElementById('imposter-voting').classList.add('hidden');
+                            } else {
+                                document.getElementById('continue-voting').classList.add('hidden');
+                                document.getElementById('imposter-voting').classList.remove('hidden');
+                                updateVotingPlayers(data.currentMatch.players);
+                            }
+                            
+                            // Update voting status when rejoining
+                            updateVotingStatus(data.currentMatch.players, data.currentMatch.votes || []);
+                        } else {
+                            // Show game screen for normal gameplay
+                            document.getElementById('game-screen').classList.remove('hidden');
+                            showGamePlayersList(); // Show players list when restoring match
+                            updateMatchDisplay(data.currentMatch);
+                        }
+                    }
+                } else {
+                    // Check for pending match ID from URL
+                    const pendingMatchId = sessionStorage.getItem('pendingMatchId');
+                    if (pendingMatchId) {
+                        sessionStorage.removeItem('pendingMatchId');
+                        joinMatchById(pendingMatchId);
+                    }
+                }
+            } else {
+                console.error('Socket login failed:', data.message);
+                // If socket login fails, logout user
+                logout();
+            }
+        });
+        
+        socket.on('force_logout', (data) => {
+            logout();
+            setTimeout(() => {
+                showError(data.message || 'Du wurdest von einem anderen Gerät ausgeloggt.');
+            }, 100);
+        });
+        
+        socket.on('player_reconnected', (data) => {
+            console.log(`${data.username} ist wieder da!`);
+            // Optionally show a notification
+        });
+        
+        // Socket Events for Lobby
         socket.on('lobby_updated', (data) => {
             updateLobby(data.matches);
         });
