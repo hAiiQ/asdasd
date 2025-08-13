@@ -276,7 +276,7 @@
             max-height: 70vh;
             overflow-y: auto;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
+            z-index: 1500; /* Higher than voting screen to stay visible during voting */
             display: none; /* Hidden by default */
         }
         
@@ -1272,6 +1272,7 @@
         // UI Functions
         function showMainMenu() {
             hideAllScreens();
+            hideCompletedRoundsSidebar(); // Hide sidebar when returning to main menu
             document.getElementById('main-menu').classList.remove('hidden');
             // Show user profile if logged in
             if (currentUser) {
@@ -1305,7 +1306,7 @@
             });
             hideError();
             hideGamePlayersList(); // Hide players list when switching screens
-            hideCompletedRoundsSidebar(); // Hide completed rounds sidebar when switching screens
+            // Note: Don't hide completed rounds sidebar here, it should persist during voting
         }
         
         function showGamePlayersList() {
@@ -1943,7 +1944,7 @@
                 
                 document.getElementById('game-screen').classList.add('hidden');
                 hideGamePlayersList();
-                hideCompletedRoundsSidebar(); // Hide sidebar during voting
+                // Keep completed rounds sidebar visible during voting
                 document.getElementById('voting-screen').classList.remove('hidden');
                 
                 if (data.gameState === 'voting_continue') {
@@ -2016,7 +2017,7 @@
                 // Hide game screen during voting and only show voting screen
                 document.getElementById('game-screen').classList.add('hidden');
                 hideGamePlayersList(); // Hide players list during voting
-                hideCompletedRoundsSidebar(); // Hide sidebar during voting
+                // Keep completed rounds sidebar visible during voting
                 document.getElementById('voting-screen').classList.remove('hidden');
                 
                 // Update voting status
@@ -2035,7 +2036,7 @@
                 // Hide game screen during voting and only show voting screen
                 document.getElementById('game-screen').classList.add('hidden');
                 hideGamePlayersList(); // Hide players list during voting
-                hideCompletedRoundsSidebar(); // Hide sidebar during voting
+                // Keep completed rounds sidebar visible during voting
                 document.getElementById('voting-screen').classList.remove('hidden');
                 
                 // Update voting status
@@ -2097,6 +2098,7 @@
             // Hide game screens and show waiting room
             hideAllScreens();
             hideGamePlayersList();
+            hideCompletedRoundsSidebar(); // Hide sidebar when returning to lobby
             document.getElementById('waiting-room').classList.remove('hidden');
             document.getElementById('user-profile').classList.remove('hidden');
             
