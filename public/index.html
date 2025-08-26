@@ -3350,6 +3350,23 @@
             currentVotingType = null;
             allRounds = [];
             
+            // Hide all voting interfaces and reset UI for new game
+            document.getElementById('voting-section').classList.add('hidden');
+            document.getElementById('continue-voting').classList.add('hidden');
+            document.getElementById('imposter-voting').classList.add('hidden');
+            document.getElementById('continue-voting-inline').classList.add('hidden');
+            document.getElementById('imposter-voting-inline').classList.add('hidden');
+            document.getElementById('voting-screen').classList.add('hidden');
+            
+            // Clear words list for new game
+            const wordsList = document.getElementById('words-list');
+            if (wordsList) {
+                wordsList.innerHTML = '';
+            }
+            
+            // Show game info section (normal gameplay view)
+            document.getElementById('game-info').classList.remove('hidden');
+            
             // Enable voting buttons for new game
             enableVotingButtons();
             
@@ -3406,10 +3423,35 @@
             } else {
                 document.getElementById('word-input-section').classList.add('hidden');
             }
+            
+            // Clear any existing word input value
+            const wordInput = document.getElementById('word-input');
+            if (wordInput) {
+                wordInput.value = '';
+            }
         });
         
         socket.on('word_submitted', (data) => {
             console.log('word_submitted event received:', data);
+            
+            // If this is round 1 and no words yet, it means this is a fresh start - reset everything
+            if (data.round === 1 && (!data.words || data.words.length <= 1)) {
+                console.log('Fresh game start detected - resetting all UI');
+                // Reset voting interfaces
+                document.getElementById('voting-section').classList.add('hidden');
+                document.getElementById('continue-voting').classList.add('hidden');
+                document.getElementById('imposter-voting').classList.add('hidden');
+                document.getElementById('continue-voting-inline').classList.add('hidden');
+                document.getElementById('imposter-voting-inline').classList.add('hidden');
+                document.getElementById('voting-screen').classList.add('hidden');
+                
+                // Show game info section
+                document.getElementById('game-info').classList.remove('hidden');
+                
+                // Reset voting state
+                hasVoted = false;
+                currentVotingType = null;
+            }
             
             // Spectators should not participate in voting
             if (isSpectator) {
