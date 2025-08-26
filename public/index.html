@@ -2786,6 +2786,15 @@
             const wordTitle = document.getElementById('word-title');
             const wordText = document.getElementById('word-text');
             
+            // Play countdown sound effect
+            try {
+                const audio = new Audio('/sounds/reveal.mp3');
+                audio.volume = 0.7;
+                audio.play().catch(e => console.log('Could not play countdown sound:', e));
+            } catch (e) {
+                console.log('Countdown sound playback error:', e);
+            }
+            
             // Hide lobby/waiting room when countdown starts
             hideAllScreens();
             
@@ -3336,8 +3345,13 @@
             
             currentPlayerName = data.currentPlayer;
             
-            // Reset rounds when game starts
+            // Reset game state when new game starts
+            hasVoted = false;
+            currentVotingType = null;
             allRounds = [];
+            
+            // Enable voting buttons for new game
+            enableVotingButtons();
             
             // Update word display based on spectator status
             if (isSpectator) {
