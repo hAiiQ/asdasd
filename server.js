@@ -23,7 +23,6 @@ try {
         users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
     }
 } catch (error) {
-    console.log('Creating new users file...');
     users = {};
 }
 
@@ -75,6 +74,12 @@ app.post('/api/register', (req, res) => {
     users[lowerUsername] = {
         username: username, // Original case
         password: password,
+        vip: false, // VIP status
+        avatar: {
+            type: 'standard', // 'standard', 'männlich', 'weiblich'
+            id: 0, // 0 for standard, 1-20 for gender-specific
+            frame: 0 // 0 for no frame, 1-7 for frames, 'rainbow' for VIP rainbow
+        },
         stats: {
             gamesPlayed: 0,
             wins: 0,
@@ -110,14 +115,82 @@ app.post('/api/login', (req, res) => {
         return res.json({ success: false, message: 'Falsches Passwort.' });
     }
     
+    // Ensure user has avatar data (for existing users)
+    if (!users[lowerUsername].avatar) {
+        users[lowerUsername].avatar = { type: 'standard', id: 0, frame: 0 };
+        saveUsers(); // Save the updated user data
+    }
+    
+    // Ensure user has VIP status (for existing users)
+    if (users[lowerUsername].vip === undefined) {
+        users[lowerUsername].vip = false;
+        saveUsers(); // Save the updated user data
+    }
+    
     res.json({ 
         success: true, 
         message: 'Login erfolgreich!',
         user: {
             username: users[lowerUsername].username,
+            vip: users[lowerUsername].vip || false,
+            avatar: users[lowerUsername].avatar || { type: 'standard', id: 0, frame: 0 },
             stats: users[lowerUsername].stats
         }
     });
+});
+
+// Avatar update endpoint
+app.post('/api/update-avatar', (req, res) => {
+    const { username, avatar } = req.body;
+    const lowerUsername = username.toLowerCase();
+    
+    if (!users[lowerUsername]) {
+        return res.json({ success: false, message: 'Benutzer nicht gefunden.' });
+    }
+    
+    // Validate avatar data
+    if (!avatar || typeof avatar !== 'object') {
+        return res.json({ success: false, message: 'Ungültige Avatar-Daten.' });
+    }
+    
+    const { type, id, frame } = avatar;
+    
+    // Validate avatar type
+    if (!['standard', 'männlich', 'weiblich'].includes(type)) {
+        return res.json({ success: false, message: 'Ungültiger Avatar-Typ.' });
+    }
+    
+    // Validate avatar ID
+    if (type === 'standard' && id !== 0) {
+        return res.json({ success: false, message: 'Standard-Avatar muss ID 0 haben.' });
+    }
+    if ((type === 'männlich' || type === 'weiblich') && (id < 1 || id > 20)) {
+        return res.json({ success: false, message: 'Avatar-ID muss zwischen 1 und 20 sein.' });
+    }
+    
+    // Validate frame ID
+    if (frame === 'rainbow') {
+        // Rainbow frame is only for VIP users
+        if (!users[lowerUsername].vip) {
+            return res.json({ success: false, message: 'Rainbow-Rahmen ist nur für VIP-Benutzer verfügbar.' });
+        }
+    } else if (frame < 0 || frame > 7) {
+        return res.json({ success: false, message: 'Rahmen-ID muss zwischen 0 und 7 sein oder "rainbow" für VIPs.' });
+    }
+    
+    // Update avatar
+    users[lowerUsername].avatar = { type, id, frame };
+    
+    try {
+        saveUsers();
+        res.json({ 
+            success: true, 
+            message: 'Avatar erfolgreich aktualisiert!',
+            avatar: users[lowerUsername].avatar
+        });
+    } catch (error) {
+        res.json({ success: false, message: 'Fehler beim Speichern des Avatars.' });
+    }
 });
 
 app.get('/api/stats/:username', (req, res) => {
@@ -141,207 +214,1691 @@ app.get('/match/:id', (req, res) => {
 
 // Word pool for the game with hints for imposter
 const wordPool = [
-    { word: 'Pizza', hint: 'Triangel' },
-    { word: 'Katze', hint: 'Schnurren' },
-    { word: 'Auto', hint: 'Benzin' },
-    { word: 'Baum', hint: 'Ringe' },
-    { word: 'Strand', hint: 'Muscheln' },
-    { word: 'Buch', hint: 'Eselsohren' },
-    { word: 'Kaffee', hint: 'Bohnen' },
-    { word: 'Musik', hint: 'Noten' },
-    { word: 'Schule', hint: 'Pausenhof' },
-    { word: 'Computer', hint: 'Binär' },
-    { word: 'Telefon', hint: 'Klingelton' },
-    { word: 'Sonne', hint: 'Vitamin' },
-    { word: 'Regen', hint: 'Tropfen' },
-    { word: 'Haus', hint: 'Dachziegel' },
-    { word: 'Garten', hint: 'Gnome' },
-    { word: 'Film', hint: 'Frames' },
-    { word: 'Sport', hint: 'Fairplay' },
-    { word: 'Urlaub', hint: 'Souvenirs' },
-    { word: 'Familie', hint: 'Stammbaum' },
-    { word: 'Freunde', hint: 'Vertrauen' },
-    { word: 'Arbeit', hint: 'Feierabend' },
-    { word: 'Spiel', hint: 'Regeln' },
-    { word: 'Essen', hint: 'Tischmanieren' },
-    { word: 'Trinken', hint: 'Durst' },
-    { word: 'Schlaf', hint: 'Traumfänger' },
-    { word: 'Zeit', hint: 'Ticktack' },
-    { word: 'Geld', hint: 'Papier' },
-    { word: 'Liebe', hint: 'Pfeil' },
-    { word: 'Glück', hint: 'Kleeblatt' },
-    { word: 'Traum', hint: 'Sandmann' },
-    { word: 'Farbe', hint: 'Regenbogen' },
-    { word: 'Licht', hint: 'Geschwindigkeit' },
-    { word: 'Dunkel', hint: 'Mondschein' },
-    { word: 'Warm', hint: 'Kuschelzeit' },
-    { word: 'Kalt', hint: 'Atem' },
-    { word: 'Groß', hint: 'Perspektive' },
-    { word: 'Klein', hint: 'Ameisen' },
-    { word: 'Schnell', hint: 'Zeitreise' },
-    { word: 'Langsam', hint: 'Zeitlupe' },
-    { word: 'Hoch', hint: 'Bergspitze' },
-    { word: 'Tief', hint: 'Meeresgrund' },
-    { word: 'Neu', hint: 'Erstausgabe' },
-    { word: 'Alt', hint: 'Antiquität' },
-    { word: 'Gut', hint: 'Daumen' },
-    { word: 'Schlecht', hint: 'Buhrufe' },
-    { word: 'Fenster', hint: 'Glas' },
-    { word: 'Tür', hint: 'Klinke' },
-    { word: 'Stuhl', hint: 'Beine' },
-    { word: 'Tisch', hint: 'Tischdecke' },
-    { word: 'Bett', hint: 'Kopfkissen' },
-    { word: 'Küche', hint: 'Geruch' },
-    { word: 'Bad', hint: 'Dampf' },
-    { word: 'Wasser', hint: 'H2O' },
-    { word: 'Feuer', hint: 'Prometheus' },
-    { word: 'Luft', hint: 'Sauerstoff' },
-    { word: 'Erde', hint: 'Blau' },
-    { word: 'Himmel', hint: 'Wolkenkratzer' },
-    { word: 'Stern', hint: 'Lichtjahre' },
-    { word: 'Mond', hint: 'Armstrong' },
-    { word: 'Blume', hint: 'Bienen' },
-    { word: 'Gras', hint: 'Sprenger' },
-    { word: 'Vogel', hint: 'Federleicht' },
-    { word: 'Fisch', hint: 'Blubbern' },
-    { word: 'Hund', hint: 'Freund' },
-    { word: 'Maus', hint: 'Computer' },
-    { word: 'Pferd', hint: 'Troja' },
-    { word: 'Kuh', hint: 'Milchstraße' },
-    { word: 'Schwein', hint: 'Spardose' },
-    { word: 'Huhn', hint: 'Ei' },
-    { word: 'Apfel', hint: 'Newton' },
-    { word: 'Banane', hint: 'Kalium' },
-    { word: 'Orange', hint: 'Farbe' },
-    { word: 'Brot', hint: 'Täglich' },
-    { word: 'Käse', hint: 'Löcher' },
-    { word: 'Milch', hint: 'Weiß' },
-    { word: 'Zucker', hint: 'Würfel' },
-    { word: 'Salz', hint: 'Gold' },
-    { word: 'Pfeffer', hint: 'Niesen' },
-    { word: 'Schokolade', hint: 'Azteken' },
-    { word: 'Kuchen', hint: 'Geburtstag' },
-    { word: 'Eis', hint: 'Titanic' },
-    { word: 'Tee', hint: 'Boston' },
-    { word: 'Wein', hint: 'Trauben' },
-    { word: 'Bier', hint: 'Oktoberfest' },
-    { word: 'Brille', hint: 'Sehtest' },
-    { word: 'Hut', hint: 'Kopfschmuck' },
-    { word: 'Schuhe', hint: 'Paar' },
-    { word: 'Hemd', hint: 'Business' },
-    { word: 'Hose', hint: 'Beine' },
-    { word: 'Jacke', hint: 'Außenhülle' },
-    { word: 'Kleid', hint: 'Prinzessin' },
-    { word: 'Socken', hint: 'Verlieren' },
-    { word: 'Uhr', hint: 'Pünktlichkeit' },
-    { word: 'Ring', hint: 'Ewigkeit' },
-    { word: 'Kette', hint: 'Verbindung' },
-    { word: 'Tasche', hint: 'Tragbar' },
-    { word: 'Koffer', hint: 'Reise' },
-    { word: 'Regenschirm', hint: 'Wetterschutz' },
-    { word: 'Schlüssel', hint: 'Zugang' },
-    { word: 'Handy', hint: 'Smartphone' },
-    { word: 'Radio', hint: 'Frequenz' },
-    { word: 'Fernseher', hint: 'Couch' },
-    { word: 'Lampe', hint: 'Edison' },
-    { word: 'Kerze', hint: 'Wind' },
-    { word: 'Spiegel', hint: 'Schneewittchen' },
-    { word: 'Kamera', hint: 'Tausend' },
-    { word: 'Fahrrad', hint: 'Räder' },
-    { word: 'Motorrad', hint: 'Harley' },
-    { word: 'Bus', hint: 'Öffentlich' },
-    { word: 'Zug', hint: 'Schiene' },
-    { word: 'Flugzeug', hint: 'Wright' },
-    { word: 'Schiff', hint: 'Titanic' },
-    { word: 'Brücke', hint: 'Verbindung' },
-    { word: 'Straße', hint: 'Asphalt' },
-    { word: 'Park', hint: 'Grün' },
-    { word: 'See', hint: 'Still' },
-    { word: 'Fluss', hint: 'Fließend' },
-    { word: 'Berg', hint: 'Gipfel' },
-    { word: 'Tal', hint: 'Tiefe' },
-    { word: 'Wald', hint: 'Bäume' },
-    { word: 'Wiese', hint: 'Teppich' },
-    { word: 'Schnee', hint: 'Flocken' },
-    { word: 'Gewitter', hint: 'Zeus' },
-    { word: 'Wind', hint: 'Unsichtbar' },
-    { word: 'Nebel', hint: 'Schleier' },
-    { word: 'Frost', hint: 'Kristalle' },
-    { word: 'Hitze', hint: 'Wüste' },
-    { word: 'Kälte', hint: 'Arktis' },
-    { word: 'Frühling', hint: 'Erwachen' },
-    { word: 'Sommer', hint: 'Heiß' },
-    { word: 'Herbst', hint: 'Bunt' },
-    { word: 'Winter', hint: 'Kalt' },
-    { word: 'Morgen', hint: 'Beginn' },
-    { word: 'Mittag', hint: 'Mitte' },
-    { word: 'Abend', hint: 'Ende' },
-    { word: 'Nacht', hint: 'Dunkel' },
-    { word: 'Montag', hint: 'Start' },
-    { word: 'Freitag', hint: 'TGIF' },
-    { word: 'Samstag', hint: 'Weekend' },
-    { word: 'Sonntag', hint: 'Ruhe' },
-    { word: 'Januar', hint: 'Vorsätze' },
-    { word: 'Dezember', hint: 'Geschenke' },
-    { word: 'Geburtstag', hint: 'Kerzen' },
-    { word: 'Hochzeit', hint: 'Weiß' },
-    { word: 'Weihnachten', hint: 'Kamin' },
-    { word: 'Ostern', hint: 'Verstecken' },
-    { word: 'Urlaub', hint: 'Auszeit' },
-    { word: 'Ferien', hint: 'Schulfrei' },
-    { word: 'Party', hint: 'Laut' },
-    { word: 'Konzert', hint: 'Live' },
-    { word: 'Theater', hint: 'Bühne' },
-    { word: 'Museum', hint: 'Alt' },
-    { word: 'Bibliothek', hint: 'Leise' },
-    { word: 'Krankenhaus', hint: 'Kittel' },
-    { word: 'Apotheke', hint: 'Medizin' },
-    { word: 'Supermarkt', hint: 'Einkaufen' },
-    { word: 'Restaurant', hint: 'Bedienung' },
-    { word: 'Café', hint: 'Espresso' },
-    { word: 'Hotel', hint: 'Übernachten' },
-    { word: 'Bank', hint: 'Tresor' },
-    { word: 'Post', hint: 'Brief' },
-    { word: 'Polizei', hint: 'Sirene' },
-    { word: 'Feuerwehr', hint: 'Rot' },
-    { word: 'Zahnarzt', hint: 'Bohren' },
-    { word: 'Friseur', hint: 'Schere' },
-    { word: 'Bäcker', hint: 'Früh' },
-    { word: 'Metzger', hint: 'Fleisch' },
-    { word: 'Lehrer', hint: 'Kreide' },
-    { word: 'Arzt', hint: 'Stethoskop' },
-    { word: 'Pilot', hint: 'Himmel' },
-    { word: 'Koch', hint: 'Herd' },
-    { word: 'Mechaniker', hint: 'Öl' },
-    { word: 'Gärtner', hint: 'Pflanzen' },
-    { word: 'Maler', hint: 'Pinsel' },
-    { word: 'Musiker', hint: 'Instrument' },
-    { word: 'Schreiber', hint: 'Feder' },
-    { word: 'Läufer', hint: 'Marathon' },
-    { word: 'Schwimmer', hint: 'Chlor' },
-    { word: 'Tänzer', hint: 'Rhythmus' },
-    { word: 'Sänger', hint: 'Mikrofon' },
-    { word: 'Schauspieler', hint: 'Rolle' },
-    { word: 'Künstler', hint: 'Kreativität' },
-    { word: 'Wissenschaftler', hint: 'Forschung' },
-    { word: 'Student', hint: 'Prüfung' },
-    { word: 'Rentner', hint: 'Rente' },
-    { word: 'Baby', hint: 'Windel' },
-    { word: 'Kind', hint: 'Spielplatz' },
-    { word: 'Teenager', hint: 'Pubertät' },
-    { word: 'Erwachsener', hint: 'Verantwortung' },
-    { word: 'Mann', hint: 'XY' },
-    { word: 'Frau', hint: 'XX' },
-    { word: 'Großvater', hint: 'Opa' },
-    { word: 'Großmutter', hint: 'Oma' },
-    { word: 'Bruder', hint: 'Geschwister' },
-    { word: 'Schwester', hint: 'Geschwister' },
-    { word: 'Vater', hint: 'Papa' },
-    { word: 'Mutter', hint: 'Mama' },
-    { word: 'Ehemann', hint: 'Trauring' },
-    { word: 'Ehefrau', hint: 'Trauring' },
-    { word: 'Nachbar', hint: 'Nebenan' },
-    { word: 'Fremder', hint: 'Unbekannt' }
+    { 
+        word: 'Pizza', 
+        hintB: 'Stiefel',     // kreativer Tipp für das Wort (Italien)
+        hintA: 'Form'         // Tipp für Tipp B
+    },
+    { 
+        word: 'Hund', 
+        hintB: 'Freund',
+        hintA: 'Beziehung'
+    },
+    { 
+        word: 'Auto', 
+        hintB: 'Benzin',
+        hintA: 'Kraftstoff'
+    },
+    { 
+        word: 'Schule', 
+        hintB: 'Alphabet',
+        hintA: 'Buchstaben'
+    },
+    { 
+        word: 'Meer', 
+        hintB: 'Salz',
+        hintA: 'Geschmack'
+    },
+    { 
+        word: 'Buch', 
+        hintB: 'Papier',
+        hintA: 'Material'
+    },
+    { 
+        word: 'Kaffee', 
+        hintB: 'Wachmacher',
+        hintA: 'Wirkung'
+    },
+    { 
+        word: 'Baum', 
+        hintB: 'Ringe',
+        hintA: 'Kreise'
+    },
+    { 
+        word: 'Handy', 
+        hintB: 'Digital',
+        hintA: 'Technologie'
+    },
+    { 
+        word: 'Musik', 
+        hintB: 'Töne',
+        hintA: 'Klang'
+    },
+    { 
+        word: 'Sonne', 
+        hintB: 'Gelb',
+        hintA: 'Farbe'
+    },
+    { 
+        word: 'Haus', 
+        hintB: 'Dach',
+        hintA: 'Oben'
+    },
+    { 
+        word: 'Wasser', 
+        hintB: 'Durchsichtig',
+        hintA: 'Sichtbar'
+    },
+    { 
+        word: 'Brot', 
+        hintB: 'Backofen',
+        hintA: 'Hitze'
+    },
+    { 
+        word: 'Zeit', 
+        hintB: 'Uhr',
+        hintA: 'Zeiger'
+    },
+    { 
+        word: 'Fahrrad', 
+        hintB: 'Kette',
+        hintA: 'Verbindung'
+    },
+    { 
+        word: 'Telefon', 
+        hintB: 'Klingeln',
+        hintA: 'Geräusch'
+    },
+    { 
+        word: 'Computer', 
+        hintB: 'Maus',
+        hintA: 'Tier'
+    },
+    { 
+        word: 'Küche', 
+        hintB: 'Herd',
+        hintA: 'Kochen'
+    },
+    { 
+        word: 'Schuhe', 
+        hintB: 'Schnürsenkel',
+        hintA: 'Binden'
+    },
+    { 
+        word: 'Berg', 
+        hintB: 'Gipfel',
+        hintA: 'Spitze'
+    },
+    { 
+        word: 'Regen', 
+        hintB: 'Tropfen',
+        hintA: 'Fallen'
+    },
+    { 
+        word: 'Feuer', 
+        hintB: 'Rauch',
+        hintA: 'Grau'
+    },
+    { 
+        word: 'Katze', 
+        hintB: 'Miau',
+        hintA: 'Laut'
+    },
+    { 
+        word: 'Vogel', 
+        hintB: 'Fliegen',
+        hintA: 'Luft'
+    },
+    { 
+        word: 'Blume', 
+        hintB: 'Duft',
+        hintA: 'Riechen'
+    },
+    { 
+        word: 'Strand', 
+        hintB: 'Sand',
+        hintA: 'Körner'
+    },
+    { 
+        word: 'Fenster', 
+        hintB: 'Glas',
+        hintA: 'Durchsichtig'
+    },
+    { 
+        word: 'Stuhl', 
+        hintB: 'Sitzen',
+        hintA: 'Position'
+    },
+    { 
+        word: 'Tisch', 
+        hintB: 'Beine',
+        hintA: 'Stützen'
+    },
+    { 
+        word: 'Lampe', 
+        hintB: 'Schatten',
+        hintA: 'Dunkel'
+    },
+    { 
+        word: 'Brille', 
+        hintB: 'Sehen',
+        hintA: 'Augen'
+    },
+    { 
+        word: 'Uhr', 
+        hintB: 'Ticken',
+        hintA: 'Rhythmus'
+    },
+    { 
+        word: 'Schlüssel', 
+        hintB: 'Öffnen',
+        hintA: 'Zugang'
+    },
+    { 
+        word: 'Tür', 
+        hintB: 'Schwelle',
+        hintA: 'Grenze'
+    },
+    { 
+        word: 'Bett', 
+        hintB: 'Träume',
+        hintA: 'Nacht'
+    },
+    { 
+        word: 'Kühlschrank', 
+        hintB: 'Kalt',
+        hintA: 'Temperatur'
+    },
+    { 
+        word: 'Spiegel', 
+        hintB: 'Reflexion',
+        hintA: 'Zurück'
+    },
+    { 
+        word: 'Gitarre', 
+        hintB: 'Saiten',
+        hintA: 'Schnüre'
+    },
+    { 
+        word: 'Ball', 
+        hintB: 'Rund',
+        hintA: 'Form'
+    },
+    { 
+        word: 'Zug', 
+        hintB: 'Schienen',
+        hintA: 'Metall'
+    },
+    { 
+        word: 'Flugzeug', 
+        hintB: 'Wolken',
+        hintA: 'Himmel'
+    },
+    { 
+        word: 'Schiff', 
+        hintB: 'Anker',
+        hintA: 'Schwer'
+    },
+    { 
+        word: 'Brücke', 
+        hintB: 'Verbinden',
+        hintA: 'Zusammen'
+    },
+    { 
+        word: 'Park', 
+        hintB: 'Bank',
+        hintA: 'Sitzen'
+    },
+    { 
+        word: 'Kino', 
+        hintB: 'Popcorn',
+        hintA: 'Snack'
+    },
+    { 
+        word: 'Restaurant', 
+        hintB: 'Kellner',
+        hintA: 'Service'
+    },
+    { 
+        word: 'Hotel', 
+        hintB: 'Übernachten',
+        hintA: 'Schlafen'
+    },
+    { 
+        word: 'Supermarkt', 
+        hintB: 'Einkaufswagen',
+        hintA: 'Räder'
+    },
+    { 
+        word: 'Bank', 
+        hintB: 'Geld',
+        hintA: 'Wert'
+    },
+    { 
+        word: 'Polizei', 
+        hintB: 'Uniform',
+        hintA: 'Kleidung'
+    },
+    { 
+        word: 'Arzt', 
+        hintB: 'Stethoskop',
+        hintA: 'Hören'
+    },
+    { 
+        word: 'Lehrer', 
+        hintB: 'Tafel',
+        hintA: 'Schreibfläche'
+    },
+    { 
+        word: 'Bäcker', 
+        hintB: 'Mehl',
+        hintA: 'Pulver'
+    },
+    { 
+        word: 'Friseur', 
+        hintB: 'Schere',
+        hintA: 'Schneiden'
+    },
+    { 
+        word: 'Zahnarzt', 
+        hintB: 'Bohren',
+        hintA: 'Löcher'
+    },
+    { 
+        word: 'Pilot', 
+        hintB: 'Cockpit',
+        hintA: 'Steuerung'
+    },
+    { 
+        word: 'Koch', 
+        hintB: 'Pfanne',
+        hintA: 'Rund'
+    },
+    { 
+        word: 'Mechaniker', 
+        hintB: 'Schraubenschlüssel',
+        hintA: 'Werkzeug'
+    },
+    { 
+        word: 'Maler', 
+        hintB: 'Pinsel',
+        hintA: 'Haare'
+    },
+    { 
+        word: 'Gärtner', 
+        hintB: 'Erde',
+        hintA: 'Boden'
+    },
+    { 
+        word: 'Elektriker', 
+        hintB: 'Strom',
+        hintA: 'Energie'
+    },
+    { 
+        word: 'Apfel', 
+        hintB: 'Kerngehäuse',
+        hintA: 'Mitte'
+    },
+    { 
+        word: 'Banane', 
+        hintB: 'Schale',
+        hintA: 'Hülle'
+    },
+    { 
+        word: 'Orange', 
+        hintB: 'Vitamin',
+        hintA: 'Gesundheit'
+    },
+    { 
+        word: 'Erdbeere', 
+        hintB: 'Samen',
+        hintA: 'Außen'
+    },
+    { 
+        word: 'Tomate', 
+        hintB: 'Gemüse',
+        hintA: 'Kategorie'
+    },
+    { 
+        word: 'Karotte', 
+        hintB: 'Wurzel',
+        hintA: 'Unter'
+    },
+    { 
+        word: 'Kartoffel', 
+        hintB: 'Knolle',
+        hintA: 'Rund'
+    },
+    { 
+        word: 'Zwiebel', 
+        hintB: 'Tränen',
+        hintA: 'Weinen'
+    },
+    { 
+        word: 'Knoblauch', 
+        hintB: 'Geruch',
+        hintA: 'Nase'
+    },
+    { 
+        word: 'Salat', 
+        hintB: 'Blätter',
+        hintA: 'Grün'
+    },
+    { 
+        word: 'Reis', 
+        hintB: 'Körner',
+        hintA: 'Klein'
+    },
+    { 
+        word: 'Nudeln', 
+        hintB: 'Italien',
+        hintA: 'Land'
+    },
+    { 
+        word: 'Fleisch', 
+        hintB: 'Protein',
+        hintA: 'Muskel'
+    },
+    { 
+        word: 'Fisch', 
+        hintB: 'Schuppen',
+        hintA: 'Haut'
+    },
+    { 
+        word: 'Ei', 
+        hintB: 'Schale',
+        hintA: 'Hart'
+    },
+    { 
+        word: 'Milch', 
+        hintB: 'Weiß',
+        hintA: 'Farbe'
+    },
+    { 
+        word: 'Käse', 
+        hintB: 'Löcher',
+        hintA: 'Öffnungen'
+    },
+    { 
+        word: 'Butter', 
+        hintB: 'Gelb',
+        hintA: 'Farbe'
+    },
+    { 
+        word: 'Honig', 
+        hintB: 'Bienen',
+        hintA: 'Insekten'
+    },
+    { 
+        word: 'Zucker', 
+        hintB: 'Süß',
+        hintA: 'Geschmack'
+    },
+    { 
+        word: 'Salz', 
+        hintB: 'Kristalle',
+        hintA: 'Struktur'
+    },
+    { 
+        word: 'Pfeffer', 
+        hintB: 'Scharf',
+        hintA: 'Intensiv'
+    },
+    { 
+        word: 'Tee', 
+        hintB: 'Blätter',
+        hintA: 'Pflanzen'
+    },
+    { 
+        word: 'Schokolade', 
+        hintB: 'Kakao',
+        hintA: 'Bohne'
+    },
+    { 
+        word: 'Eis', 
+        hintB: 'Kugel',
+        hintA: 'Rund'
+    },
+    { 
+        word: 'Kuchen', 
+        hintB: 'Kerzen',
+        hintA: 'Licht'
+    },
+    { 
+        word: 'Torte', 
+        hintB: 'Schichten',
+        hintA: 'Ebenen'
+    },
+    { 
+        word: 'Keks', 
+        hintB: 'Krümel',
+        hintA: 'Stücke'
+    },
+    { 
+        word: 'Bonbon', 
+        hintB: 'Lutschen',
+        hintA: 'Zunge'
+    },
+    { 
+        word: 'Gummibärchen', 
+        hintB: 'Weich',
+        hintA: 'Textur'
+    },
+    { 
+        word: 'Limonade', 
+        hintB: 'Sprudel',
+        hintA: 'Blasen'
+    },
+    { 
+        word: 'Saft', 
+        hintB: 'Frucht',
+        hintA: 'Ursprung'
+    },
+    { 
+        word: 'Wein', 
+        hintB: 'Trauben',
+        hintA: 'Cluster'
+    },
+    { 
+        word: 'Bier', 
+        hintB: 'Schaum',
+        hintA: 'Oben'
+    },
+    { 
+        word: 'Schwimmbad', 
+        hintB: 'Chlor',
+        hintA: 'Geruch'
+    },
+    { 
+        word: 'Bibliothek', 
+        hintB: 'Leise',
+        hintA: 'Stille'
+    },
+    { 
+        word: 'Krankenhaus', 
+        hintB: 'Weiß',
+        hintA: 'Farbe'
+    },
+    { 
+        word: 'Flughafen', 
+        hintB: 'Terminal',
+        hintA: 'Ende'
+    },
+    { 
+        word: 'Bahnhof', 
+        hintB: 'Gleis',
+        hintA: 'Spur'
+    },
+    { 
+        word: 'Tankstelle', 
+        hintB: 'Zapfsäule',
+        hintA: 'Säule'
+    },
+    { 
+        word: 'Friedhof', 
+        hintB: 'Grabstein',
+        hintA: 'Stein'
+    },
+    { 
+        word: 'Spielplatz', 
+        hintB: 'Schaukel',
+        hintA: 'Bewegung'
+    },
+    { 
+        word: 'Zoo', 
+        hintB: 'Käfig',
+        hintA: 'Gitter'
+    },
+    { 
+        word: 'Museum', 
+        hintB: 'Ausstellung',
+        hintA: 'Zeigen'
+    },
+    { 
+        word: 'Theater', 
+        hintB: 'Bühne',
+        hintA: 'Plattform'
+    },
+    { 
+        word: 'Konzert', 
+        hintB: 'Applaus',
+        hintA: 'Klatschen'
+    },
+    { 
+        word: 'Hochzeit', 
+        hintB: 'Ringe',
+        hintA: 'Kreise'
+    },
+    { 
+        word: 'Geburtstag', 
+        hintB: 'Kerzen',
+        hintA: 'Licht'
+    },
+    { 
+        word: 'Weihnachten', 
+        hintB: 'Tannenbaum',
+        hintA: 'Nadeln'
+    },
+    { 
+        word: 'Ostern', 
+        hintB: 'Ei',
+        hintA: 'Oval'
+    },
+    { 
+        word: 'Halloween', 
+        hintB: 'Kürbis',
+        hintA: 'Orange'
+    },
+    { 
+        word: 'Silvester', 
+        hintB: 'Feuerwerk',
+        hintA: 'Explosionen'
+    },
+    { 
+        word: 'Karneval', 
+        hintB: 'Kostüm',
+        hintA: 'Verkleidung'
+    },
+    { 
+        word: 'Urlaub', 
+        hintB: 'Koffer',
+        hintA: 'Packen'
+    },
+    { 
+        word: 'Strand', 
+        hintB: 'Muscheln',
+        hintA: 'Sammeln'
+    },
+    { 
+        word: 'Berge', 
+        hintB: 'Wandern',
+        hintA: 'Gehen'
+    },
+    { 
+        word: 'See', 
+        hintB: 'Rudern',
+        hintA: 'Boot'
+    },
+    { 
+        word: 'Wald', 
+        hintB: 'Pilze',
+        hintA: 'Sammeln'
+    },
+    { 
+        word: 'Wiese', 
+        hintB: 'Gras',
+        hintA: 'Grün'
+    },
+    { 
+        word: 'Garten', 
+        hintB: 'Blumenbeete',
+        hintA: 'Ordnung'
+    },
+    { 
+        word: 'Balkon', 
+        hintB: 'Geländer',
+        hintA: 'Schutz'
+    },
+    { 
+        word: 'Keller', 
+        hintB: 'Dunkel',
+        hintA: 'Licht'
+    },
+    { 
+        word: 'Dachboden', 
+        hintB: 'Staub',
+        hintA: 'Alt'
+    },
+    { 
+        word: 'Garage', 
+        hintB: 'Tor',
+        hintA: 'Öffnung'
+    },
+    { 
+        word: 'Badezimmer', 
+        hintB: 'Dusche',
+        hintA: 'Wasser'
+    },
+    { 
+        word: 'Wohnzimmer', 
+        hintB: 'Sofa',
+        hintA: 'Sitzen'
+    },
+    { 
+        word: 'Schlafzimmer', 
+        hintB: 'Kissen',
+        hintA: 'Weich'
+    },
+    { 
+        word: 'Arbeitszimmer', 
+        hintB: 'Schreibtisch',
+        hintA: 'Arbeiten'
+    },
+    { 
+        word: 'Kleiderschrank', 
+        hintB: 'Bügel',
+        hintA: 'Hängen'
+    },
+    { 
+        word: 'Waschmaschine', 
+        hintB: 'Schleudern',
+        hintA: 'Drehen'
+    },
+    { 
+        word: 'Geschirrspüler', 
+        hintB: 'Tabs',
+        hintA: 'Tabletten'
+    },
+    { 
+        word: 'Mikrowelle', 
+        hintB: 'Strahlen',
+        hintA: 'Unsichtbar'
+    },
+    { 
+        word: 'Ofen', 
+        hintB: 'Backen',
+        hintA: 'Hitze'
+    },
+    { 
+        word: 'Toaster', 
+        hintB: 'Krümel',
+        hintA: 'Reste'
+    },
+    { 
+        word: 'Kaffeemaschine', 
+        hintB: 'Filter',
+        hintA: 'Durchlassen'
+    },
+    { 
+        word: 'Wasserkocher', 
+        hintB: 'Dampf',
+        hintA: 'Heiß'
+    },
+    { 
+        word: 'Staubsauger', 
+        hintB: 'Beutel',
+        hintA: 'Sammeln'
+    },
+    { 
+        word: 'Bügeleisen', 
+        hintB: 'Falten',
+        hintA: 'Glätten'
+    },
+    { 
+        word: 'Fernseher', 
+        hintB: 'Fernbedienung',
+        hintA: 'Kontrolle'
+    },
+    { 
+        word: 'Radio', 
+        hintB: 'Wellen',
+        hintA: 'Frequenz'
+    },
+    { 
+        word: 'Kopfhörer', 
+        hintB: 'Ohren',
+        hintA: 'Hören'
+    },
+    { 
+        word: 'Lautsprecher', 
+        hintB: 'Bass',
+        hintA: 'Tief'
+    },
+    { 
+        word: 'Kamera', 
+        hintB: 'Objektiv',
+        hintA: 'Linse'
+    },
+    { 
+        word: 'Handy', 
+        hintB: 'Akku',
+        hintA: 'Energie'
+    },
+    { 
+        word: 'Laptop', 
+        hintB: 'Tastatur',
+        hintA: 'Tippen'
+    },
+    { 
+        word: 'Tablet', 
+        hintB: 'Touch',
+        hintA: 'Berühren'
+    },
+    { 
+        word: 'Drucker', 
+        hintB: 'Tinte',
+        hintA: 'Flüssigkeit'
+    },
+    { 
+        word: 'Scanner', 
+        hintB: 'Licht',
+        hintA: 'Hell'
+    },
+    { 
+        word: 'Router', 
+        hintB: 'WLAN',
+        hintA: 'Drahtlos'
+    },
+    { 
+        word: 'Festplatte', 
+        hintB: 'Speicher',
+        hintA: 'Behalten'
+    },
+    { 
+        word: 'USB', 
+        hintB: 'Stick',
+        hintA: 'Stecken'
+    },
+    { 
+        word: 'Maus', 
+        hintB: 'Klick',
+        hintA: 'Geräusch'
+    },
+    { 
+        word: 'Tastatur', 
+        hintB: 'QWERTZ',
+        hintA: 'Reihenfolge'
+    },
+    { 
+        word: 'Monitor', 
+        hintB: 'Pixel',
+        hintA: 'Punkte'
+    },
+    { 
+        word: 'Ventilator', 
+        hintB: 'Rotation',
+        hintA: 'Drehen'
+    },
+    { 
+        word: 'Heizung', 
+        hintB: 'Thermostat',
+        hintA: 'Regler'
+    },
+    { 
+        word: 'Klimaanlage', 
+        hintB: 'Kühlen',
+        hintA: 'Kalt'
+    },
+    { 
+        word: 'Rolladen', 
+        hintB: 'Lamellen',
+        hintA: 'Streifen'
+    },
+    { 
+        word: 'Vorhang', 
+        hintB: 'Stoff',
+        hintA: 'Material'
+    },
+    { 
+        word: 'Teppich', 
+        hintB: 'Fasern',
+        hintA: 'Fäden'
+    },
+    { 
+        word: 'Fliesen', 
+        hintB: 'Fugenmasse',
+        hintA: 'Zwischen'
+    },
+    { 
+        word: 'Parkett', 
+        hintB: 'Holz',
+        hintA: 'Baum'
+    },
+    { 
+        word: 'Tapete', 
+        hintB: 'Muster',
+        hintA: 'Wiederholung'
+    },
+    { 
+        word: 'Farbe', 
+        hintB: 'Pinsel',
+        hintA: 'Werkzeug'
+    },
+    { 
+        word: 'Hammer', 
+        hintB: 'Nagel',
+        hintA: 'Spitz'
+    },
+    { 
+        word: 'Schraubenzieher', 
+        hintB: 'Kreuz',
+        hintA: 'Plus'
+    },
+    { 
+        word: 'Säge', 
+        hintB: 'Zähne',
+        hintA: 'Beißen'
+    },
+    { 
+        word: 'Bohrmaschine', 
+        hintB: 'Loch',
+        hintA: 'Öffnung'
+    },
+    { 
+        word: 'Leiter', 
+        hintB: 'Sprossen',
+        hintA: 'Stufen'
+    },
+    { 
+        word: 'Eimer', 
+        hintB: 'Henkel',
+        hintA: 'Griff'
+    },
+    { 
+        word: 'Besen', 
+        hintB: 'Kehren',
+        hintA: 'Sauber'
+    },
+    { 
+        word: 'Wischmop', 
+        hintB: 'Feucht',
+        hintA: 'Nass'
+    },
+    { 
+        word: 'Schwamm', 
+        hintB: 'Poren',
+        hintA: 'Löcher'
+    },
+    { 
+        word: 'Seife', 
+        hintB: 'Schaum',
+        hintA: 'Blasen'
+    },
+    { 
+        word: 'Handtuch', 
+        hintB: 'Trocknen',
+        hintA: 'Entfernen'
+    },
+    { 
+        word: 'Zahnbürste', 
+        hintB: 'Borsten',
+        hintA: 'Steif'
+    },
+    { 
+        word: 'Zahnpasta', 
+        hintB: 'Tube',
+        hintA: 'Drücken'
+    },
+    { 
+        word: 'Shampoo', 
+        hintB: 'Haare',
+        hintA: 'Kopf'
+    },
+    { 
+        word: 'Duschgel', 
+        hintB: 'Gel',
+        hintA: 'Konsistenz'
+    },
+    { 
+        word: 'Parfüm', 
+        hintB: 'Sprühen',
+        hintA: 'Nebel'
+    },
+    { 
+        word: 'Makeup', 
+        hintB: 'Schminken',
+        hintA: 'Verändern'
+    },
+    { 
+        word: 'Lippenstift', 
+        hintB: 'Rot',
+        hintA: 'Farbe'
+    },
+    { 
+        word: 'Nagellack', 
+        hintB: 'Glänzend',
+        hintA: 'Spiegeln'
+    },
+    { 
+        word: 'Kamm', 
+        hintB: 'Zähne',
+        hintA: 'Reihe'
+    },
+    { 
+        word: 'Bürste', 
+        hintB: 'Entwirren',
+        hintA: 'Ordnen'
+    },
+    { 
+        word: 'Fön', 
+        hintB: 'Luft',
+        hintA: 'Wind'
+    },
+    { 
+        word: 'Handschuhe', 
+        hintB: 'Finger',
+        hintA: 'Fünf'
+    },
+    { 
+        word: 'Socken', 
+        hintB: 'Paar',
+        hintA: 'Zwei'
+    },
+    { 
+        word: 'Unterwäsche', 
+        hintB: 'Drunter',
+        hintA: 'Unter'
+    },
+    { 
+        word: 'T-Shirt', 
+        hintB: 'Kurzarm',
+        hintA: 'Kurz'
+    },
+    { 
+        word: 'Pullover', 
+        hintB: 'Wolle',
+        hintA: 'Schaf'
+    },
+    { 
+        word: 'Jacke', 
+        hintB: 'Reißverschluss',
+        hintA: 'Ziehen'
+    },
+    { 
+        word: 'Hose', 
+        hintB: 'Beine',
+        hintA: 'Zwei'
+    },
+    { 
+        word: 'Rock', 
+        hintB: 'Weiblich',
+        hintA: 'Geschlecht'
+    },
+    { 
+        word: 'Kleid', 
+        hintB: 'Elegant',
+        hintA: 'Schick'
+    },
+    { 
+        word: 'Anzug', 
+        hintB: 'Krawatte',
+        hintA: 'Binden'
+    },
+    { 
+        word: 'Krawatte', 
+        hintB: 'Knoten',
+        hintA: 'Verbinden'
+    },
+    { 
+        word: 'Gürtel', 
+        hintB: 'Schnalle',
+        hintA: 'Metall'
+    },
+    { 
+        word: 'Mütze', 
+        hintB: 'Kopf',
+        hintA: 'Oben'
+    },
+    { 
+        word: 'Hut', 
+        hintB: 'Krempe',
+        hintA: 'Rand'
+    },
+    { 
+        word: 'Sonnenbrille', 
+        hintB: 'UV',
+        hintA: 'Schutz'
+    },
+    { 
+        word: 'Regenschirm', 
+        hintB: 'Speichen',
+        hintA: 'Stäbe'
+    },
+    { 
+        word: 'Rucksack', 
+        hintB: 'Schultern',
+        hintA: 'Tragen'
+    },
+    { 
+        word: 'Handtasche', 
+        hintB: 'Griff',
+        hintA: 'Halten'
+    },
+    { 
+        word: 'Geldbörse', 
+        hintB: 'Münzen',
+        hintA: 'Rund'
+    },
+    { 
+        word: 'Sportschuhe', 
+        hintB: 'Laufen',
+        hintA: 'Schnell'
+    },
+    { 
+        word: 'Sandalen', 
+        hintB: 'Sommer',
+        hintA: 'Heiß'
+    },
+    { 
+        word: 'Stiefel', 
+        hintB: 'Hoch',
+        hintA: 'Oben'
+    },
+    { 
+        word: 'Diamant', 
+        hintB: 'Härte',
+        hintA: 'Widerstand'
+    },
+    { 
+        word: 'Mond', 
+        hintB: 'Phasen',
+        hintA: 'Wandel'
+    },
+    { 
+        word: 'Stern', 
+        hintB: 'Funkel',
+        hintA: 'Glitzern'
+    },
+    { 
+        word: 'Wolke', 
+        hintB: 'Schatten',
+        hintA: 'Dunkel'
+    },
+    { 
+        word: 'Blitz', 
+        hintB: 'Donner',
+        hintA: 'Krach'
+    },
+    { 
+        word: 'Schnee', 
+        hintB: 'Flocken',
+        hintA: 'Einzeln'
+    },
+    { 
+        word: 'Eis', 
+        hintB: 'Glatt',
+        hintA: 'Rutschig'
+    },
+    { 
+        word: 'Feuer', 
+        hintB: 'Wärme',
+        hintA: 'Temperatur'
+    },
+    { 
+        word: 'Wind', 
+        hintB: 'Bewegung',
+        hintA: 'Dynamik'
+    },
+    { 
+        word: 'Schatten', 
+        hintB: 'Silhouette',
+        hintA: 'Umriss'
+    },
+    { 
+        word: 'Licht', 
+        hintB: 'Photonen',
+        hintA: 'Teilchen'
+    },
+    { 
+        word: 'Geist', 
+        hintB: 'Unsichtbar',
+        hintA: 'Verborgen'
+    },
+    { 
+        word: 'Traum', 
+        hintB: 'Unterbewusstsein',
+        hintA: 'Versteckt'
+    },
+    { 
+        word: 'Gedanke', 
+        hintB: 'Idee',
+        hintA: 'Konzept'
+    },
+    { 
+        word: 'Gefühl', 
+        hintB: 'Emotion',
+        hintA: 'Reaktion'
+    },
+    { 
+        word: 'Liebe', 
+        hintB: 'Herz',
+        hintA: 'Organ'
+    },
+    { 
+        word: 'Freude', 
+        hintB: 'Lachen',
+        hintA: 'Humor'
+    },
+    { 
+        word: 'Angst', 
+        hintB: 'Flucht',
+        hintA: 'Weglaufen'
+    },
+    { 
+        word: 'Wut', 
+        hintB: 'Rot',
+        hintA: 'Farbe'
+    },
+    { 
+        word: 'Trauer', 
+        hintB: 'Tränen',
+        hintA: 'Feuchtigkeit'
+    },
+    { 
+        word: 'Hoffnung', 
+        hintB: 'Zukunft',
+        hintA: 'Morgen'
+    },
+    { 
+        word: 'Glaube', 
+        hintB: 'Vertrauen',
+        hintA: 'Sicherheit'
+    },
+    { 
+        word: 'Zweifel', 
+        hintB: 'Unsicherheit',
+        hintA: 'Wackelig'
+    },
+    { 
+        word: 'Mut', 
+        hintB: 'Tapferkeit',
+        hintA: 'Held'
+    },
+    { 
+        word: 'Kraft', 
+        hintB: 'Stärke',
+        hintA: 'Muskeln'
+    },
+    { 
+        word: 'Schwäche', 
+        hintB: 'Verletzlichkeit',
+        hintA: 'Zerbrechlich'
+    },
+    { 
+        word: 'Gesundheit', 
+        hintB: 'Fitness',
+        hintA: 'Sport'
+    },
+    { 
+        word: 'Krankheit', 
+        hintB: 'Symptome',
+        hintA: 'Zeichen'
+    },
+    { 
+        word: 'Medizin', 
+        hintB: 'Heilung',
+        hintA: 'Reparatur'
+    },
+    { 
+        word: 'Vitamin', 
+        hintB: 'Gesund',
+        hintA: 'Gut'
+    },
+    { 
+        word: 'Sport', 
+        hintB: 'Schweiß',
+        hintA: 'Feuchtigkeit'
+    },
+    { 
+        word: 'Marathon', 
+        hintB: 'Ausdauer',
+        hintA: 'Durchhalten'
+    },
+    { 
+        word: 'Fußball', 
+        hintB: 'Tor',
+        hintA: 'Öffnung'
+    },
+    { 
+        word: 'Basketball', 
+        hintB: 'Korb',
+        hintA: 'Behälter'
+    },
+    { 
+        word: 'Tennis', 
+        hintB: 'Schläger',
+        hintA: 'Werkzeug'
+    },
+    { 
+        word: 'Golf', 
+        hintB: 'Loch',
+        hintA: 'Öffnung'
+    },
+    { 
+        word: 'Schwimmen', 
+        hintB: 'Bahnen',
+        hintA: 'Linien'
+    },
+    { 
+        word: 'Laufen', 
+        hintB: 'Tempo',
+        hintA: 'Geschwindigkeit'
+    },
+    { 
+        word: 'Springen', 
+        hintB: 'Höhe',
+        hintA: 'Oben'
+    },
+    { 
+        word: 'Klettern', 
+        hintB: 'Griff',
+        hintA: 'Halten'
+    },
+    { 
+        word: 'Wandern', 
+        hintB: 'Pfad',
+        hintA: 'Weg'
+    },
+    { 
+        word: 'Reisen', 
+        hintB: 'Ferne',
+        hintA: 'Entfernung'
+    },
+    { 
+        word: 'Abenteuer', 
+        hintB: 'Risiko',
+        hintA: 'Gefahr'
+    },
+    { 
+        word: 'Entdeckung', 
+        hintB: 'Neu',
+        hintA: 'Frisch'
+    },
+    { 
+        word: 'Geheimnis', 
+        hintB: 'Rätsel',
+        hintA: 'Puzzle'
+    },
+    { 
+        word: 'Wahrheit', 
+        hintB: 'Ehrlichkeit',
+        hintA: 'Aufrichtig'
+    },
+    { 
+        word: 'Lüge', 
+        hintB: 'Falsch',
+        hintA: 'Verkehrt'
+    },
+    { 
+        word: 'Versprechen', 
+        hintB: 'Wort',
+        hintA: 'Sprache'
+    },
+    { 
+        word: 'Verrat', 
+        hintB: 'Enttäuschung',
+        hintA: 'Traurig'
+    },
+    { 
+        word: 'Freundschaft', 
+        hintB: 'Vertrauen',
+        hintA: 'Sicher'
+    },
+    { 
+        word: 'Familie', 
+        hintB: 'Blut',
+        hintA: 'Rot'
+    },
+    { 
+        word: 'Eltern', 
+        hintB: 'Ursprung',
+        hintA: 'Anfang'
+    },
+    { 
+        word: 'Kind', 
+        hintB: 'Unschuld',
+        hintA: 'Rein'
+    },
+    { 
+        word: 'Baby', 
+        hintB: 'Windel',
+        hintA: 'Wickeln'
+    },
+    { 
+        word: 'Jugend', 
+        hintB: 'Rebellion',
+        hintA: 'Widerstand'
+    },
+    { 
+        word: 'Alter', 
+        hintB: 'Weisheit',
+        hintA: 'Klugheit'
+    },
+    { 
+        word: 'Generation', 
+        hintB: 'Zeitraum',
+        hintA: 'Dauer'
+    },
+    { 
+        word: 'Vergangenheit', 
+        hintB: 'Geschichte',
+        hintA: 'Erzählung'
+    },
+    { 
+        word: 'Gegenwart', 
+        hintB: 'Jetzt',
+        hintA: 'Moment'
+    },
+    { 
+        word: 'Zukunft', 
+        hintB: 'Unbekannt',
+        hintA: 'Fremd'
+    },
+    { 
+        word: 'Ewigkeit', 
+        hintB: 'Unendlich',
+        hintA: 'Grenzenlos'
+    },
+    { 
+        word: 'Moment', 
+        hintB: 'Augenblick',
+        hintA: 'Sehen'
+    },
+    { 
+        word: 'Sekunde', 
+        hintB: 'Tick',
+        hintA: 'Geräusch'
+    },
+    { 
+        word: 'Minute', 
+        hintB: 'Sechzig',
+        hintA: 'Zahl'
+    },
+    { 
+        word: 'Stunde', 
+        hintB: 'Zeiger',
+        hintA: 'Pfeil'
+    },
+    { 
+        word: 'Tag', 
+        hintB: 'Sonnenschein',
+        hintA: 'Hell'
+    },
+    { 
+        word: 'Nacht', 
+        hintB: 'Dunkelheit',
+        hintA: 'Schwarz'
+    },
+    { 
+        word: 'Woche', 
+        hintB: 'Sieben',
+        hintA: 'Glück'
+    },
+    { 
+        word: 'Monat', 
+        hintB: 'Kalender',
+        hintA: 'Blätter'
+    },
+    { 
+        word: 'Jahr', 
+        hintB: 'Jahreszeiten',
+        hintA: 'Vier'
+    },
+    { 
+        word: 'Frühling', 
+        hintB: 'Blüten',
+        hintA: 'Öffnen'
+    },
+    { 
+        word: 'Sommer', 
+        hintB: 'Hitze',
+        hintA: 'Warm'
+    },
+    { 
+        word: 'Herbst', 
+        hintB: 'Fallen',
+        hintA: 'Runter'
+    },
+    { 
+        word: 'Winter', 
+        hintB: 'Kälte',
+        hintA: 'Frieren'
+    },
+    { 
+        word: 'Wetter', 
+        hintB: 'Vorhersage',
+        hintA: 'Zukunft'
+    },
+    { 
+        word: 'Klima', 
+        hintB: 'Wandel',
+        hintA: 'Veränderung'
+    },
+    { 
+        word: 'Umwelt', 
+        hintB: 'Schutz',
+        hintA: 'Sicherheit'
+    },
+    { 
+        word: 'Natur', 
+        hintB: 'Wild',
+        hintA: 'Ungezähmt'
+    },
+    { 
+        word: 'Tier', 
+        hintB: 'Instinkt',
+        hintA: 'Gefühl'
+    },
+    { 
+        word: 'Pflanze', 
+        hintB: 'Photosynthese',
+        hintA: 'Umwandlung'
+    },
+    { 
+        word: 'Blatt', 
+        hintB: 'Grün',
+        hintA: 'Farbe'
+    },
+    { 
+        word: 'Wurzel', 
+        hintB: 'Versteckt',
+        hintA: 'Unsichtbar'
+    },
+    { 
+        word: 'Stamm', 
+        hintB: 'Rinde',
+        hintA: 'Haut'
+    },
+    { 
+        word: 'Ast', 
+        hintB: 'Verzweigung',
+        hintA: 'Teilung'
+    },
+    { 
+        word: 'Frucht', 
+        hintB: 'Samen',
+        hintA: 'Kern'
+    },
+    { 
+        word: 'Beere', 
+        hintB: 'Klein',
+        hintA: 'Winzig'
+    },
+    { 
+        word: 'Nuss', 
+        hintB: 'Schale',
+        hintA: 'Schutz'
+    },
+    { 
+        word: 'Getreide', 
+        hintB: 'Feld',
+        hintA: 'Fläche'
+    },
+    { 
+        word: 'Weizen', 
+        hintB: 'Golden',
+        hintA: 'Gelb'
+    },
+    { 
+        word: 'Mais', 
+        hintB: 'Kolben',
+        hintA: 'Zylinder'
+    },
+    { 
+        word: 'Hafer', 
+        hintB: 'Flocken',
+        hintA: 'Dünn'
+    },
+    { 
+        word: 'Gerste', 
+        hintB: 'Bier',
+        hintA: 'Getränk'
+    },
+    { 
+        word: 'Roggen', 
+        hintB: 'Dunkel',
+        hintA: 'Schwarz'
+    },
+    { 
+        word: 'Hirse', 
+        hintB: 'Winzig',
+        hintA: 'Mikroskopisch'
+    },
+    { 
+        word: 'Quinoa', 
+        hintB: 'Superfood',
+        hintA: 'Besonders'
+    },
+    { 
+        word: 'Chia', 
+        hintB: 'Samen',
+        hintA: 'Anfang'
+    },
+    { 
+        word: 'Mandel', 
+        hintB: 'Oval',
+        hintA: 'Form'
+    },
+    { 
+        word: 'Walnuss', 
+        hintB: 'Gehirn',
+        hintA: 'Denken'
+    },
+    { 
+        word: 'Haselnuss', 
+        hintB: 'Rund',
+        hintA: 'Kreis'
+    },
+    { 
+        word: 'Kokos', 
+        hintB: 'Palme',
+        hintA: 'Baum'
+    },
+    { 
+        word: 'Ananas', 
+        hintB: 'Stachelig',
+        hintA: 'Spitz'
+    },
+    { 
+        word: 'Mango', 
+        hintB: 'Tropisch',
+        hintA: 'Heiß'
+    },
+    { 
+        word: 'Kiwi', 
+        hintB: 'Pelzig',
+        hintA: 'Haare'
+    },
+    { 
+        word: 'Papaya', 
+        hintB: 'Exotisch',
+        hintA: 'Fremd'
+    },
+    { 
+        word: 'Avocado', 
+        hintB: 'Cremig',
+        hintA: 'Weich'
+    },
+    { 
+        word: 'Olive', 
+        hintB: 'Öl',
+        hintA: 'Flüssigkeit'
+    },
+    { 
+        word: 'Gurke', 
+        hintB: 'Erfrischend',
+        hintA: 'Kühl'
+    },
+    { 
+        word: 'Paprika', 
+        hintB: 'Bunt',
+        hintA: 'Farben'
+    },
+    { 
+        word: 'Chili', 
+        hintB: 'Schärfe',
+        hintA: 'Brennen'
+    },
+    { 
+        word: 'Ingwer', 
+        hintB: 'Würzig',
+        hintA: 'Geschmack'
+    },
+    { 
+        word: 'Zimt', 
+        hintB: 'Weihnachten',
+        hintA: 'Fest'
+    },
+    { 
+        word: 'Vanille', 
+        hintB: 'Süß',
+        hintA: 'Zucker'
+    },
+    { 
+        word: 'Schokolade', 
+        hintB: 'Verführung',
+        hintA: 'Lockend'
+    },
+    { 
+        word: 'Kaffee', 
+        hintB: 'Bohne',
+        hintA: 'Samen'
+    },
+    { 
+        word: 'Espresso', 
+        hintB: 'Konzentriert',
+        hintA: 'Fokussiert'
+    },
+    { 
+        word: 'Cappuccino', 
+        hintB: 'Schaum',
+        hintA: 'Luft'
+    },
+    { 
+        word: 'Latte', 
+        hintB: 'Milchig',
+        hintA: 'Weiß'
+    },
+    { 
+        word: 'Mokka', 
+        hintB: 'Schokoladig',
+        hintA: 'Süß'
+    },
+    { 
+        word: 'Matcha', 
+        hintB: 'Grünpulver',
+        hintA: 'Staub'
+    },
+    { 
+        word: 'Cocktail', 
+        hintB: 'Gemischt',
+        hintA: 'Zusammen'
+    },
+    { 
+        word: 'Smoothie', 
+        hintB: 'Glatt',
+        hintA: 'Eben'
+    },
+    { 
+        word: 'Milkshake', 
+        hintB: 'Schütteln',
+        hintA: 'Bewegen'
+    },
+    { 
+        word: 'Eistee', 
+        hintB: 'Kalt',
+        hintA: 'Frieren'
+    },
+    { 
+        word: 'Limonade', 
+        hintB: 'Zitrone',
+        hintA: 'Sauer'
+    },
+    { 
+        word: 'Cola', 
+        hintB: 'Braun',
+        hintA: 'Farbe'
+    },
+    { 
+        word: 'Sprite', 
+        hintB: 'Klar',
+        hintA: 'Durchsichtig'
+    },
+    { 
+        word: 'Fanta', 
+        hintB: 'Orange',
+        hintA: 'Frucht'
+    }
 ];
 
 function generateMatchId() {
@@ -360,7 +1917,8 @@ function createMatch(hostName, isPrivate, password = null) {
         password,
         gameState: 'waiting', // waiting, playing, voting_continue, voting_imposter, finished
         currentWord: null,
-        imposterHint: null,
+        imposterHintA: null,  // Tipp für Tipp B (indirekter Tipp)
+        imposterHintB: null,  // Kreativer Tipp für das Wort
         imposterSocketId: null,
         imposterPlayerName: null, // Store imposter by name, not socket ID
         currentRound: 0,
@@ -400,15 +1958,51 @@ function addPlayerToMatch(matchId, socketId, playerName) {
         shouldBeHost = false;
     }
     
+    // Get user avatar information
+    const user = users[userKey];
+    let userAvatar = { type: 'standard', id: 0, frame: 0 };
+    
+    if (user && user.avatar) {
+        userAvatar = user.avatar;
+    } else if (user) {
+        // Ensure user has avatar data and save it
+        user.avatar = userAvatar;
+        console.log(`Adding default avatar to user ${playerName}`);
+        saveUsers();
+    }
+    
     const player = {
         id: socketId,
         name: playerName,
+        avatar: userAvatar,
         isHost: shouldBeHost,
         word: isRejoin ? originalData.word : null,
-        isImposter: isRejoin ? originalData.isImposter : false
+        isImposter: isRejoin ? originalData.isImposter : false,
+        isSpectator: isRejoin ? (originalData.isSpectator || false) : false
     };
     
-    match.players.push(player);
+    // Insert player at correct position to maintain order
+    if (isRejoin && match.initialPlayerOrder) {
+        // Find the correct position based on initial player order
+        const originalIndex = match.initialPlayerOrder.findIndex(p => p.name === playerName);
+        if (originalIndex !== -1) {
+            // Count how many players from the initial order are already in the current players array
+            let insertPosition = 0;
+            for (let i = 0; i < originalIndex; i++) {
+                const earlierPlayerName = match.initialPlayerOrder[i].name;
+                if (match.players.find(p => p.name === earlierPlayerName)) {
+                    insertPosition++;
+                }
+            }
+            match.players.splice(insertPosition, 0, player);
+        } else {
+            // Fallback: add to end if not found in initial order
+            match.players.push(player);
+        }
+    } else {
+        // For new joins or when no initial order exists, add to end
+        match.players.push(player);
+    }
     
     // Add to allParticipants if not already there
     if (!match.allParticipants.includes(playerName)) {
@@ -420,6 +2014,7 @@ function addPlayerToMatch(matchId, socketId, playerName) {
         match.originalPlayerData.set(playerName, {
             word: null,
             isImposter: false,
+            isSpectator: false,
             originalJoinOrder: match.allParticipants.length - 1
         });
     } else {
@@ -428,9 +2023,29 @@ function addPlayerToMatch(matchId, socketId, playerName) {
             match.imposterSocketId = socketId; // Update imposter socket ID
         }
         
+        // Update current player index after potentially inserting player at different position
+        if (match.gameState === 'playing' && match.currentPlayerName && match.initialPlayerOrder) {
+            const currentPlayerOriginalIndex = match.initialPlayerOrder.findIndex(p => p.name === match.currentPlayerName);
+            if (currentPlayerOriginalIndex !== -1) {
+                // Find how many players from initial order before current player are now in players array
+                let newCurrentIndex = 0;
+                for (let i = 0; i < currentPlayerOriginalIndex; i++) {
+                    const earlierPlayerName = match.initialPlayerOrder[i].name;
+                    if (match.players.find(p => p.name === earlierPlayerName)) {
+                        newCurrentIndex++;
+                    }
+                }
+                match.currentPlayerIndex = newCurrentIndex;
+            }
+        }
+        
         // Restore current player turn if this was the active player
         if (match.currentPlayerName === playerName && match.gameState === 'playing') {
-            match.currentPlayerIndex = match.players.length - 1; // Set to current position in array
+            // Find the correct index in the current players array
+            const playerIndex = match.players.findIndex(p => p.name === playerName);
+            if (playerIndex !== -1) {
+                match.currentPlayerIndex = playerIndex;
+            }
         }
     }
     
@@ -480,34 +2095,34 @@ function removePlayerFromMatch(socketId) {
     socketToPlayer.delete(socketId);
 }
 
-function startGame(matchId) {
+function prepareGame(matchId) {
     const match = matches.get(matchId);
     if (!match || match.players.length < 4) return false;
     
-    // Reset game state
-    match.gameState = 'playing';
+    // Don't change game state yet, just prepare words
     match.currentRound = 1;
     match.currentPlayerIndex = Math.floor(Math.random() * match.players.length);
-    match.currentPlayerName = match.players[match.currentPlayerIndex].name; // Store current player name
+    match.currentPlayerName = match.players[match.currentPlayerIndex].name;
     match.wordsThisRound = [];
-    match.allRounds = []; // Reset all rounds history
+    match.allRounds = [];
     
-    // Store the initial random player order for consistent round progression
-    match.initialPlayerOrder = [...match.players]; // Copy the current player array
-    match.initialPlayerIndex = match.currentPlayerIndex; // Store the starting index
+    // Store the initial random player order
+    match.initialPlayerOrder = [...match.players];
+    match.initialPlayerIndex = match.currentPlayerIndex;
     
     // Choose random word and imposter
     const wordObj = wordPool[Math.floor(Math.random() * wordPool.length)];
     match.currentWord = wordObj.word;
-    match.imposterHint = wordObj.hint;
+    match.imposterHintA = wordObj.hintA;
+    match.imposterHintB = wordObj.hintB;
     const imposterIndex = Math.floor(Math.random() * match.players.length);
     match.imposterSocketId = match.players[imposterIndex].id;
-    match.imposterPlayerName = match.players[imposterIndex].name; // Store imposter name
-    
-    // Assign words to players and update original data
+    match.imposterPlayerName = match.players[imposterIndex].name;
+
+    // Assign words to players
     match.players.forEach((player, index) => {
         if (index === imposterIndex) {
-            player.word = `Imposter (Tipp: ${match.imposterHint})`;
+            player.word = `Imposter (Tipp: ${match.imposterHintA})`;
             player.isImposter = true;
         } else {
             player.word = match.currentWord;
@@ -525,6 +2140,16 @@ function startGame(matchId) {
     return true;
 }
 
+function startGame(matchId) {
+    const match = matches.get(matchId);
+    if (!match || match.players.length < 4) return false;
+    
+    // Set game state to playing (prepareGame should have been called already)
+    match.gameState = 'playing';
+    
+    return true;
+}
+
 function resetMatchToLobby(matchId) {
     const match = matches.get(matchId);
     if (!match) return false;
@@ -532,7 +2157,8 @@ function resetMatchToLobby(matchId) {
     // Reset game state to waiting
     match.gameState = 'waiting';
     match.currentWord = null;
-    match.imposterHint = null;
+    match.imposterHintA = null;
+    match.imposterHintB = null;
     match.imposterSocketId = null;
     match.imposterPlayerName = null;
     match.currentRound = 0;
@@ -565,6 +2191,11 @@ function submitWord(matchId, socketId, word) {
     const currentPlayer = match.players[match.currentPlayerIndex];
     if (currentPlayer.id !== socketId) return false;
     
+    // Check if current player is a spectator
+    if (currentPlayer.isSpectator) {
+        return { error: 'Zuschauer können keine Wörter eingeben!' };
+    }
+    
     // Check if imposter guessed the correct word
     if (match.imposterSocketId === socketId && word.toLowerCase() === match.currentWord.toLowerCase()) {
         match.gameState = 'finished';
@@ -582,12 +2213,78 @@ function submitWord(matchId, socketId, word) {
         word: word
     });
     
-    // Move to next player
-    match.currentPlayerIndex = (match.currentPlayerIndex + 1) % match.players.length;
-    match.currentPlayerName = match.players[match.currentPlayerIndex].name; // Update current player name
+    // Move to next player (based on initial player order, but skip spectators)
+    if (match.initialPlayerOrder && match.initialPlayerOrder.length > 0) {
+        // Find current player's position in initial order
+        const currentPlayerName = match.players[match.currentPlayerIndex].name;
+        const currentOriginalIndex = match.initialPlayerOrder.findIndex(p => p.name === currentPlayerName);
+        
+        if (currentOriginalIndex !== -1) {
+            // Find next ACTIVE player in initial order who is currently connected
+            let nextOriginalIndex = (currentOriginalIndex + 1) % match.initialPlayerOrder.length;
+            let attempts = 0;
+            let nextPlayer = null;
+            
+            while (attempts < match.initialPlayerOrder.length) {
+                const nextPlayerName = match.initialPlayerOrder[nextOriginalIndex].name;
+                nextPlayer = match.players.find(p => p.name === nextPlayerName && !p.isSpectator);
+                
+                if (nextPlayer) {
+                    // Found next connected active player
+                    break;
+                }
+                
+                // Try next player in initial order
+                nextOriginalIndex = (nextOriginalIndex + 1) % match.initialPlayerOrder.length;
+                attempts++;
+            }
+            
+            if (nextPlayer) {
+                // Update current player index to point to next player in current array
+                match.currentPlayerIndex = match.players.findIndex(p => p.name === nextPlayer.name);
+                match.currentPlayerName = nextPlayer.name;
+            } else {
+                // Fallback: use first available active player
+                const firstActivePlayer = match.players.find(p => !p.isSpectator);
+                if (firstActivePlayer) {
+                    match.currentPlayerIndex = match.players.findIndex(p => p.name === firstActivePlayer.name);
+                    match.currentPlayerName = firstActivePlayer.name;
+                }
+            }
+        } else {
+            // Fallback to find next active player
+            let nextIndex = (match.currentPlayerIndex + 1) % match.players.length;
+            let attempts = 0;
+            
+            while (attempts < match.players.length) {
+                if (!match.players[nextIndex].isSpectator) {
+                    match.currentPlayerIndex = nextIndex;
+                    match.currentPlayerName = match.players[nextIndex].name;
+                    break;
+                }
+                nextIndex = (nextIndex + 1) % match.players.length;
+                attempts++;
+            }
+        }
+    } else {
+        // Fallback to find next active player
+        let nextIndex = (match.currentPlayerIndex + 1) % match.players.length;
+        let attempts = 0;
+        
+        while (attempts < match.players.length) {
+            if (!match.players[nextIndex].isSpectator) {
+                match.currentPlayerIndex = nextIndex;
+                match.currentPlayerName = match.players[nextIndex].name;
+                break;
+            }
+            nextIndex = (nextIndex + 1) % match.players.length;
+            attempts++;
+        }
+    }
     
-    // Check if round is complete
-    if (match.wordsThisRound.length === match.players.length) {
+    // Check if round is complete (only count active players)
+    const activePlayers = match.players.filter(p => !p.isSpectator);
+    if (match.wordsThisRound.length === activePlayers.length) {
         // Save current round to history
         match.allRounds.push({
             round: match.currentRound,
@@ -605,6 +2302,12 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
     const match = matches.get(matchId);
     if (!match) return false;
     
+    // Check if voter is a spectator
+    const voter = match.players.find(p => p.id === socketId);
+    if (voter && voter.isSpectator) {
+        return { error: 'Zuschauer können nicht voten!' };
+    }
+    
     // Remove existing vote from this player
     match.votes = match.votes.filter(v => v.playerId !== socketId);
     
@@ -614,8 +2317,9 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
         targetPlayerId: targetPlayerId
     });
     
-    // Check if all players voted
-    if (match.votes.length === match.players.length) {
+    // Check if all ACTIVE players voted
+    const activePlayers = match.players.filter(p => !p.isSpectator);
+    if (match.votes.length === activePlayers.length) {
         if (match.gameState === 'voting_continue') {
             const continueVotes = match.votes.filter(v => v.voteType === 'continue').length;
             const guessVotes = match.votes.filter(v => v.voteType === 'guess').length;
@@ -632,6 +2336,36 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
                 // Reset to the initial starting player and order from round 1
                 match.currentPlayerIndex = match.initialPlayerIndex;
                 match.currentPlayerName = match.initialPlayerOrder[match.initialPlayerIndex].name;
+                
+                // In der zweiten Runde: Imposter bekommt beide Tipps (A + B)
+                if (match.currentRound === 2) {
+                    match.players.forEach(player => {
+                        if (player.isImposter) {
+                            player.word = `Imposter (Tipp A: ${match.imposterHintA}, Tipp B: ${match.imposterHintB})`;
+                            
+                            // Update original player data for rejoining
+                            const originalData = match.originalPlayerData.get(player.name);
+                            if (originalData) {
+                                originalData.word = player.word;
+                            }
+                        }
+                    });
+                }
+                
+                // Send updated game state to all players (for all rounds)
+                match.players.forEach(player => {
+                    io.to(player.id).emit('game_started', {
+                        word: player.isSpectator ? 'Zuschauer-Modus' : player.word,
+                        isImposter: player.isSpectator ? false : player.isImposter,
+                        currentPlayer: match.currentPlayerName,
+                        round: match.currentRound,
+                        players: match.players.map(p => ({
+                            ...p,
+                            displayName: p.isSpectator ? `${p.name} (Zuschauer)` : p.name
+                        })),
+                        spectatorMode: player.isSpectator
+                    });
+                });
             }
         } else if (match.gameState === 'voting_imposter') {
             // Count votes for each player
@@ -653,11 +2387,77 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
                 }
             }
             
-            match.gameState = 'finished';
+            if (!votedOutPlayerId) {
+                // No one was voted out (tie or no votes), continue game
+                match.gameState = 'playing';
+                match.votes = [];
+                match.wordsThisRound = [];
+                return { success: true, message: 'Unentschieden - Spiel geht weiter' };
+            }
+            
+            // Check if the voted out player is the imposter
             if (votedOutPlayerId === match.imposterSocketId) {
-                return { imposterFound: true, imposterWon: false };
+                // Imposter was found - civilians win
+                match.gameState = 'finished';
+                return { imposterFound: true, imposterWon: false, votedOutPlayer: votedOutPlayerId };
             } else {
-                return { imposterFound: false, imposterWon: true };
+                // Innocent player was voted out - make them a spectator and continue
+                const votedOutPlayer = match.players.find(p => p.id === votedOutPlayerId);
+                if (votedOutPlayer) {
+                    votedOutPlayer.isSpectator = true;
+                    votedOutPlayer.word = null; // Remove their word since they're spectating
+                    
+                    // Update original player data
+                    const originalData = match.originalPlayerData.get(votedOutPlayer.name);
+                    if (originalData) {
+                        originalData.isSpectator = true;
+                        originalData.word = null;
+                    }
+                }
+                
+                // Count only active (non-spectator) players
+                const activePlayers = match.players.filter(p => !p.isSpectator);
+                
+                // Check if only 2 active players left (including imposter) - imposter wins
+                if (activePlayers.length <= 2) {
+                    match.gameState = 'finished';
+                    return { imposterFound: false, imposterWon: true, votedOutPlayer: votedOutPlayerId, reason: 'Zu wenige Spieler übrig' };
+                }
+                
+                // Continue game - reset to next round
+                match.gameState = 'playing';
+                match.votes = [];
+                match.wordsThisRound = [];
+                match.currentRound++;
+                
+                // Adjust current player index to skip spectators
+                const activePlayerNames = activePlayers.map(p => p.name);
+                if (match.initialPlayerOrder) {
+                    // Filter initial order to only include active players
+                    const activeInitialOrder = match.initialPlayerOrder.filter(p => activePlayerNames.includes(p.name));
+                    
+                    // Find next active player
+                    if (activeInitialOrder.length > 0) {
+                        match.currentPlayerIndex = match.players.findIndex(p => p.name === activeInitialOrder[0].name);
+                        match.currentPlayerName = activeInitialOrder[0].name;
+                    }
+                } else {
+                    // Fallback: find first active player
+                    const firstActivePlayer = activePlayers[0];
+                    if (firstActivePlayer) {
+                        match.currentPlayerIndex = match.players.findIndex(p => p.name === firstActivePlayer.name);
+                        match.currentPlayerName = firstActivePlayer.name;
+                    }
+                }
+                
+                return { 
+                    playerEliminated: true, 
+                    votedOutPlayer: votedOutPlayerId, 
+                    votedOutPlayerName: votedOutPlayer.name,
+                    activePlayers: activePlayers.length,
+                    totalPlayers: match.players.length,
+                    continueGame: true 
+                };
             }
         }
     }
@@ -669,6 +2469,8 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
 function updatePlayerStats(matchId, imposterWon, imposterSocketId) {
     const match = matches.get(matchId);
     if (!match) return;
+    
+    const updatedPlayers = []; // Track which players' stats were updated
     
     match.players.forEach(player => {
         const userKey = loggedInUsers.get(player.id);
@@ -709,9 +2511,26 @@ function updatePlayerStats(matchId, imposterWon, imposterSocketId) {
                 playerStats.correctVotes++;
             }
         }
+        
+        // Add to updated players list
+        updatedPlayers.push({
+            socketId: player.id,
+            username: users[userKey].username,
+            stats: playerStats
+        });
     });
     
     saveUsers();
+    
+    // Send updated stats to all affected players
+    updatedPlayers.forEach(playerData => {
+        io.to(playerData.socketId).emit('stats_updated', {
+            user: {
+                username: playerData.username,
+                stats: playerData.stats
+            }
+        });
+    });
 }
 
 io.on('connection', (socket) => {
@@ -765,6 +2584,13 @@ io.on('connection', (socket) => {
                     id: matchId,
                     ...match
                 };
+                
+                console.log(`Sending currentMatch to ${lowerUsername}:`, {
+                    id: currentMatch.id,
+                    gameState: currentMatch.gameState,
+                    allRoundsLength: currentMatch.allRounds ? currentMatch.allRounds.length : 0,
+                    allRounds: currentMatch.allRounds
+                });
                 
                 // Join the socket to the match room
                 socket.join(matchId);
@@ -961,6 +2787,70 @@ io.on('connection', (socket) => {
         });
     });
     
+    socket.on('start_countdown', () => {
+        const matchId = socketToMatch.get(socket.id);
+        const match = matches.get(matchId);
+        
+        if (!match || match.host !== socket.id) {
+            socket.emit('error', { message: 'Nur der Host kann das Spiel starten' });
+            return;
+        }
+        
+        if (!match.players || match.players.length < 4) {
+            socket.emit('error', { message: 'Mindestens 4 Spieler benötigt' });
+            return;
+        }
+        
+        // First prepare the game (assign words and imposters)
+        if (!prepareGame(matchId)) {
+            socket.emit('error', { message: 'Fehler beim Vorbereiten des Spiels' });
+            return;
+        }
+        
+        // Send countdown start with word data to all players in the match
+        const updatedMatch = matches.get(matchId);
+        updatedMatch.players.forEach(player => {
+            io.to(player.id).emit('countdown_started', {
+                word: player.word,
+                isImposter: player.isImposter
+            });
+        });
+        
+        // Start the actual game after 8 seconds (5 countdown + 3 word display)
+        setTimeout(() => {
+            if (!startGame(matchId)) {
+                // If startGame fails, notify host
+                socket.emit('error', { message: 'Fehler beim Starten des Spiels' });
+                return;
+            }
+            
+            // Send game state to all players
+            const finalMatch = matches.get(matchId);
+            if (finalMatch) {
+                finalMatch.players.forEach(player => {
+                    io.to(player.id).emit('game_started', {
+                        word: player.word,
+                        isImposter: player.isImposter,
+                        currentPlayer: finalMatch.players[finalMatch.currentPlayerIndex].name,
+                        round: finalMatch.currentRound,
+                        players: finalMatch.players
+                    });
+                });
+                
+                // Update lobby - remove match from lobby when game starts
+                io.emit('lobby_updated', {
+                    matches: Array.from(matches.values())
+                        .filter(match => match.gameState === 'waiting')
+                        .map(match => ({
+                            id: match.id,
+                            players: match.players.length,
+                            hasPassword: match.password !== null
+                        }))
+                });
+            }
+        }, 8000); // 8 second delay (5 countdown + 3 word display)
+    });
+    
     socket.on('start_game', () => {
         const matchId = socketToMatch.get(socket.id);
         const match = matches.get(matchId);
@@ -1043,7 +2933,7 @@ io.on('connection', (socket) => {
                             }))
                     });
                 }
-            }, 5000); // 5 seconds delay to show results
+            }, 15000); // 15 seconds delay to show results
         } else if (result.success) {
             const match = matches.get(matchId);
             io.to(matchId).emit('word_submitted', {
@@ -1062,14 +2952,28 @@ io.on('connection', (socket) => {
         const matchId = socketToMatch.get(socket.id);
         const result = submitVote(matchId, socket.id, voteType, targetPlayerId);
         
+        // Immediately hide voting buttons for the player who voted
+        socket.emit('vote_submitted', {
+            message: 'Deine Stimme wurde abgegeben!',
+            hideVotingInterface: true
+        });
+        
         if (result.imposterFound !== undefined) {
+            // Game ended - either imposter found or imposter won
             const match = matches.get(matchId);
             updatePlayerStats(matchId, result.imposterWon, match.imposterSocketId);
-            io.to(matchId).emit('game_finished', {
+            
+            let gameEndMessage = {
                 imposterWon: result.imposterWon,
-                imposter: match.players.find(p => p.id === match.imposterSocketId).name,
+                imposter: match.players.find(p => p.id === match.imposterSocketId)?.name || 'Unknown',
                 word: match.currentWord
-            });
+            };
+            
+            if (result.reason) {
+                gameEndMessage.reason = result.reason;
+            }
+            
+            io.to(matchId).emit('game_finished', gameEndMessage);
             
             // Reset match to lobby after a delay
             setTimeout(() => {
@@ -1095,18 +2999,92 @@ io.on('connection', (socket) => {
                             }))
                     });
                 }
-            }, 5000); // 5 seconds delay to show results
+            }, 15000); // 15 seconds delay to show results
+        } else if (result.playerEliminated) {
+            // Player was eliminated but becomes spectator and game continues
+            const match = matches.get(matchId);
+            
+            // Clear voting interface for all players
+            io.to(matchId).emit('voting_ended', {
+                message: 'Abstimmung beendet!',
+                hideVotingInterface: true
+            });
+            
+            // Notify the eliminated player that they're now a spectator
+            const eliminatedSocket = io.sockets.sockets.get(result.votedOutPlayer);
+            if (eliminatedSocket) {
+                eliminatedSocket.emit('player_eliminated', {
+                    message: 'Du wurdest aus dem Spiel gewählt und bist nun Zuschauer!',
+                    reason: 'Du warst nicht der Imposter',
+                    spectatorMode: true
+                });
+            }
+            
+            // Notify remaining players with updated player list including spectators
+            const playersWithSpectatorInfo = match.players.map(player => ({
+                ...player,
+                displayName: player.isSpectator ? `${player.name} (Zuschauer)` : player.name
+            }));
+            
+            io.to(matchId).emit('player_eliminated_update', {
+                eliminatedPlayer: result.votedOutPlayerName,
+                activePlayers: result.activePlayers,
+                totalPlayers: result.totalPlayers,
+                message: `${result.votedOutPlayerName} wurde eliminiert und ist nun Zuschauer!`,
+                gameState: match.gameState,
+                currentPlayer: match.currentPlayerName,
+                round: match.currentRound,
+                players: playersWithSpectatorInfo
+            });
+            
+            // Send updated game state to all players (including spectators)
+            match.players.forEach(player => {
+                io.to(player.id).emit('game_started', {
+                    word: player.isSpectator ? 'Zuschauer-Modus' : player.word,
+                    isImposter: player.isSpectator ? false : player.isImposter,
+                    currentPlayer: match.currentPlayerName,
+                    round: match.currentRound,
+                    players: playersWithSpectatorInfo,
+                    spectatorMode: player.isSpectator
+                });
+            });
         } else {
             const match = matches.get(matchId);
-            io.to(matchId).emit('vote_updated', {
-                gameState: match.gameState,
-                votes: match.votes,
-                players: match.players,
-                currentPlayer: match.gameState === 'playing' ? match.players[match.currentPlayerIndex].name : null,
-                round: match.currentRound,
-                words: match.wordsThisRound,
-                allRounds: match.allRounds
-            });
+            
+            // If voting is complete but game continues, send updated game state
+            if (match.gameState === 'playing') {
+                // Voting phase ended, game continues - clear voting interface for all players
+                io.to(matchId).emit('voting_ended', {
+                    message: 'Abstimmung beendet - Spiel geht weiter!',
+                    hideVotingInterface: true
+                });
+                
+                // Send game state to all players to ensure UI is updated
+                match.players.forEach(player => {
+                    io.to(player.id).emit('game_started', {
+                        word: player.isSpectator ? 'Zuschauer-Modus' : player.word,
+                        isImposter: player.isSpectator ? false : player.isImposter,
+                        currentPlayer: match.currentPlayerName,
+                        round: match.currentRound,
+                        players: match.players.map(p => ({
+                            ...p,
+                            displayName: p.isSpectator ? `${p.name} (Zuschauer)` : p.name
+                        })),
+                        spectatorMode: player.isSpectator
+                    });
+                });
+            } else {
+                // Still in voting phase, update vote status
+                io.to(matchId).emit('vote_updated', {
+                    gameState: match.gameState,
+                    votes: match.votes,
+                    players: match.players,
+                    currentPlayer: match.gameState === 'playing' ? match.players[match.currentPlayerIndex].name : null,
+                    round: match.currentRound,
+                    words: match.wordsThisRound,
+                    allRounds: match.allRounds
+                });
+            }
         }
     });
     

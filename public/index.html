@@ -27,10 +27,24 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            position: relative;
+        }
+        
+        /* Dark overlay for better readability */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: -1;
+            pointer-events: none;
         }
         
         .container {
-            max-width: 900px;
+            max-width: 1011px;
             width: 100%;
             padding: 20px;
             display: flex;
@@ -41,13 +55,13 @@
         }
         
         .card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.15) 100%);
             border-radius: 20px;
             padding: 30px;
             margin: 10px 0;
-            backdrop-filter: blur(20px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(25px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
             width: 100%;
             max-width: 500px;
@@ -140,6 +154,14 @@
             transform: translateY(-2px);
         }
         
+        /* Text Shadow for better readability */
+        p, span, div, li, label, h1, h2, h3, h4, h5, h6, 
+        .player-item, .word-item, .vote-count, #voting-status, 
+        #voting-status-inline, #current-player, #current-round,
+        #player-word, .game-info, .voting-section {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
         button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -151,6 +173,7 @@
             border: none;
             position: relative;
             overflow: hidden;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
         
         button::before {
@@ -246,7 +269,7 @@
         .game-players-list {
             position: fixed;
             top: 20px;
-            right: 20px;  /* Changed from left to right to make space for completed rounds */
+            left: 20px;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%);
             backdrop-filter: blur(15px);
             border: 2px solid rgba(255, 255, 255, 0.4);
@@ -259,64 +282,6 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             z-index: 1000;
             display: none; /* Hidden by default */
-        }
-        
-        /* Completed Rounds Sidebar - positioned on the LEFT */
-        .completed-rounds-sidebar {
-            position: fixed;
-            top: 20px;
-            left: 20px;  /* Changed from right to left */
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%);
-            backdrop-filter: blur(15px);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 12px;
-            padding: 15px;
-            min-width: 280px;
-            max-width: 320px;
-            max-height: 70vh;
-            overflow-y: auto;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            z-index: 1500; /* Higher than voting screen to stay visible during voting */
-            display: none; /* Hidden by default */
-        }
-        
-        .completed-rounds-sidebar h4 {
-            margin: 0 0 15px 0;
-            color: #fff;
-            font-size: 1em;
-            font-weight: 600;
-            text-align: center;
-        }
-        
-        .completed-round {
-            margin-bottom: 20px;
-            padding: 12px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        
-        .completed-round h5 {
-            margin: 0 0 8px 0;
-            color: #ffeb3b;
-            font-size: 0.9em;
-            font-weight: 600;
-        }
-        
-        .completed-round .word-entry-small {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
-            padding: 6px 10px;
-            margin: 4px 0;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.8em;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .completed-round .word-entry-small strong {
-            color: #4ecdc4;
         }
         
         .game-players-list h4 {
@@ -337,12 +302,16 @@
         }
         
         .game-player-item {
-            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            padding: 8px 12px;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-            border-radius: 6px;
+            border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             color: #fff;
-            font-size: 0.85em;
+            font-size: 0.9em;
             transition: all 0.2s ease;
             white-space: nowrap;
             overflow: hidden;
@@ -417,6 +386,20 @@
         
         .back-to-menu-btn:active {
             transform: translateY(0);
+        }
+        
+        /* Voting Section Styles */
+        #voting-section {
+            margin-top: 60px; /* Space for the menu button */
+            padding-top: 20px;
+        }
+        
+        #voting-section h3 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 600;
+            text-align: center;
+            color: #fff;
         }
         
         .lobby-match {
@@ -526,6 +509,12 @@
             color: #ff6b6b !important;
         }
         
+        .spectator-word {
+            border-color: rgba(150, 150, 150, 0.4) !important;
+            color: #999 !important;
+            font-style: italic;
+        }
+        
         .game-info {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
             padding: 20px;
@@ -633,6 +622,53 @@
             border: 2px solid rgba(76, 175, 80, 0.5);
             font-weight: 500;
             text-align: center;
+        }
+        
+        /* Fixed position messages that don't affect layout */
+        #messages-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .error-fixed, .success-fixed {
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin: 10px 0;
+            font-weight: 500;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 2px solid;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            animation: slideInUp 0.3s ease-out;
+            pointer-events: auto;
+        }
+        
+        .error-fixed {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.95) 0%, rgba(238, 90, 36, 0.95) 100%);
+            color: white;
+            border-color: rgba(255, 107, 107, 0.7);
+        }
+        
+        .success-fixed {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.95) 0%, rgba(56, 142, 60, 0.95) 100%);
+            color: white;
+            border-color: rgba(76, 175, 80, 0.7);
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         /* Auth and Stats Styles */
@@ -792,46 +828,722 @@
             .player-vote-grid {
                 grid-template-columns: 1fr;
             }
-            
-            /* Mobile adjustments for game sidebars */
-            .game-players-list {
-                top: 10px;
-                right: 10px;  /* Changed from left to right */
-                min-width: 150px;
-                max-width: 180px;
-                padding: 10px;
-                font-size: 0.85em;
+        }
+        
+        /* Countdown Screen */
+        .countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .countdown-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .countdown-window {
+            background: linear-gradient(135deg, #6b73ff 0%, #9d50bb 100%);
+            border-radius: 20px;
+            padding: 60px 80px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 650px;
+            width: 90%;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .countdown-overlay.show .countdown-window,
+        .countdown-overlay.show .game-finished-window {
+            transform: scale(1);
+        }
+        
+        /* Game Finished Overlay */
+        .game-finished-window {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 50%, #ff9ff3 100%);
+            border-radius: 25px;
+            padding: 50px 60px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 700px;
+            width: 90%;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .game-result-icon {
+            font-size: 4.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: resultIconPulse 2s ease-in-out infinite;
+        }
+        
+        .game-result-title {
+            font-size: 3em;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-result-content {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .game-result-content h3 {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .game-result-content p {
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 8px 0;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .game-result-content strong {
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .game-result-word {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 30px;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .game-result-word span {
+            color: #ffeb3b;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        
+        .return-countdown {
+            margin-top: 20px;
+        }
+        
+        .countdown-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .countdown-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4ecdc4, #44a08d);
+            border-radius: 4px;
+            transition: width 0.1s linear;
+            width: 100%;
+        }
+        
+        .return-countdown p {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 15px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .return-btn {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .return-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #5fd6cc, #4bb3a5);
+        }
+        
+        @keyframes resultIconPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+        
+        .countdown-title {
+            font-size: 2.5em;
+            font-weight: 500;
+            color: white;
+            margin-bottom: 50px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .countdown-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .countdown-circle::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                rgba(255, 255, 255, 0.8) 0deg,
+                rgba(255, 255, 255, 0.3) 72deg,
+                rgba(255, 255, 255, 0.1) 360deg
+            );
+            animation: spinCircle 5s linear infinite;
+            z-index: -1;
+        }
+        
+        .countdown-number {
+            font-size: 4.5em;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            animation: countdownPulse 1s ease infinite;
+        }
+        
+        .word-display {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .word-title {
+            font-size: 1.8em;
+            font-weight: 500;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .word-text {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px 30px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            animation: wordPulse 0.5s ease;
+            display: inline-block;
+            min-width: 200px;
+        }
+        
+        .word-text.imposter {
+            background: rgba(255, 107, 107, 0.3);
+            border-color: rgba(255, 107, 107, 0.5);
+            color: #ffdddd;
+        }
+        
+        @keyframes countdownPulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes wordPulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes spinCircle {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .countdown-window {
+                padding: 45px 50px;
+                max-width: 500px;
             }
             
-            .completed-rounds-sidebar {
-                top: 10px;
-                left: 10px;  /* Changed from right to left */
-                min-width: 200px;
-                max-width: 250px;
-                max-height: 50vh;
-                padding: 10px;
-                font-size: 0.8em;
+            .countdown-title {
+                font-size: 2em;
+                margin-bottom: 35px;
             }
             
-            .completed-round {
+            .countdown-circle {
+                width: 160px;
+                height: 160px;
+            }
+            
+            .countdown-number {
+                font-size: 3.5em;
+            }
+            
+            /* Game Finished Overlay Mobile */
+            .game-finished-window {
+                padding: 35px 40px;
+                max-width: 500px;
+            }
+            
+            .game-result-icon {
+                font-size: 3.5em;
                 margin-bottom: 15px;
-                padding: 8px;
             }
             
-            .completed-round h5 {
-                font-size: 0.8em;
-                margin-bottom: 6px;
+            .game-result-title {
+                font-size: 2.2em;
+                margin-bottom: 20px;
             }
             
-            .completed-round .word-entry-small {
-                padding: 4px 8px;
-                margin: 2px 0;
-                font-size: 0.7em;
+            .game-result-content {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .game-result-content h3 {
+                font-size: 1.4em;
+                margin-bottom: 12px;
+            }
+            
+            .game-result-content p {
+                font-size: 1em;
+                margin: 6px 0;
+            }
+            
+            .game-result-word {
+                font-size: 1.2em;
+                padding: 12px 20px;
+                margin-bottom: 25px;
+            }
+            
+            .return-countdown p {
+                font-size: 1em;
+            }
+            
+            .return-btn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+        }
+        
+        /* Avatar System Styles */
+        .avatar-preview-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+        }
+        
+        .avatar-container.large {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .game-player-item .avatar-container {
+            width: 35px;
+            height: 35px;
+            flex-shrink: 0;
+            margin-right: 0;
+        }
+        
+        .game-player-item .player-name {
+            flex: 1;
+            text-align: left;
+            margin-left: 0;
+        }
+        
+        .avatar-container img {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            object-fit: cover;
+        }
+        
+        .avatar-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            pointer-events: none;
+            z-index: 2;
+            object-fit: cover;
+        }
+        
+        /* Avatar Selector 3-Column Layout */
+        .avatar-selector-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px auto;
+            max-width: 1600px;
+            width: 99%;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        
+        .avatar-selector-container h2 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .avatar-selector-layout {
+            display: grid;
+            grid-template-columns: 1fr 220px 1fr;
+            gap: 25px;
+            min-height: 400px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        
+        .avatar-column, .preview-column, .frame-column {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 0;
+            overflow: hidden;
+            max-width: 100%;
+        }
+        
+        .avatar-column h3, .preview-column h3, .frame-column h3 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        
+        .preview-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .preview-column .avatar-container {
+            margin: 20px 0;
+        }
+        
+        .avatar-preview {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .avatar-type-buttons {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .avatar-type-btn {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.7em;
+            font-weight: 500;
+            min-width: 80px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .avatar-type-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .avatar-type-btn.active {
+            background: linear-gradient(135deg, #6b73ff 0%, #9d50bb 100%);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .avatar-grid, .frame-grid {
+            display: grid;
+            gap: 8px;
+            margin: 15px 0;
+            justify-items: center;
+            width: 100%;
+            padding: 5px;
+        }
+        
+        .avatar-grid {
+            grid-template-columns: repeat(5, 1fr);
+            max-width: 100%;
+        }
+        
+        .frame-grid {
+            grid-template-columns: repeat(5, 1fr);
+            max-width: 100%;
+        }
+        
+        .avatar-option, .frame-option {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            max-width: 50px;
+            max-height: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+        
+        .avatar-option img {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            object-fit: cover;
+        }
+        
+        .avatar-option:hover, .frame-option:hover {
+            transform: scale(1.1);
+            border-color: rgba(107, 115, 255, 0.6);
+            box-shadow: 0 5px 20px rgba(107, 115, 255, 0.3);
+        }
+        
+        .avatar-option.active, .frame-option.active {
+            border-color: #6b73ff;
+            background: rgba(107, 115, 255, 0.2);
+            box-shadow: 0 0 20px rgba(107, 115, 255, 0.4);
+        }
+        
+        .frame-option span {
+            font-size: 12px;
+            text-align: center;
+            color: white;
+        }
+        
+        .frame-option img {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            object-fit: cover;
+        }
+        
+        .vip-locked {
+            opacity: 0.6;
+            position: relative;
+        }
+        
+        .vip-locked:hover {
+            opacity: 0.8;
+        }
+        
+        .vip-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #000;
+            font-size: 8px;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+            z-index: 3;
+            pointer-events: none;
+        }
+        
+        .avatar-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        /* Player list avatar integration */
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .player-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(107, 115, 255, 0.3);
+        }
+        
+        .player-avatar {
+            flex-shrink: 0;
+        }
+        
+        .player-info {
+            flex-grow: 1;
+        }
+        
+        .player-name {
+            font-weight: bold;
+            color: white;
+        }
+        
+        .host-badge {
+            background: linear-gradient(135deg, #ffd700, #ffed4a);
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        /* Responsive Avatar Selector */
+        @media (max-width: 600px) {
+            .avatar-selector-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .preview-column {
+                order: -1;
+            }
+            
+            .avatar-selector-container {
+                margin: 10px;
+                padding: 20px;
+                width: calc(100% - 20px);
+                max-width: none;
+            }
+            
+            .avatar-type-buttons {
+                flex-direction: row;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .avatar-grid, .frame-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+            
+            .avatar-option, .frame-option {
+                width: 45px;
+                height: 45px;
+                max-width: 45px;
+                max-height: 45px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .avatar-grid, .frame-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+            
+            .avatar-option, .frame-option {
+                width: 40px;
+                height: 40px;
+                max-width: 40px;
+                max-height: 40px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Countdown Overlay -->
+    <div id="countdown-overlay" class="countdown-overlay">
+        <div class="countdown-window">
+            <div class="countdown-title" id="countdown-title">Spiel startet gleich...</div>
+            <div class="countdown-circle" id="countdown-circle">
+                <div class="countdown-number" id="countdown-number">5</div>
+            </div>
+            <div class="word-display" id="word-display" style="display: none;">
+                <div class="word-title" id="word-title">Dein Wort:</div>
+                <div class="word-text" id="word-text"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- User Profile (Top Right) -->
     <div id="user-profile" class="user-profile hidden">
         <div class="profile-info">
@@ -876,6 +1588,18 @@
         <!-- Main Menu -->
         <div id="main-menu" class="card hidden">
             <h2>Willkommen!</h2>
+            
+            <!-- Avatar Preview -->
+            <div class="avatar-preview-section">
+                <div class="current-avatar-display">
+                    <div id="current-avatar-container" class="avatar-container">
+                        <img id="current-avatar-img" src="/images/avatare/standard.png" alt="Aktueller Avatar">
+                        <img id="current-frame-img" class="avatar-frame hidden" alt="Avatar-Rahmen">
+                    </div>
+                </div>
+                <button onclick="showAvatarSelector()" class="secondary-btn">Avatar ändern</button>
+            </div>
+            
             <button onclick="showCreateMatch()">Neues Spiel erstellen</button>
             <button onclick="showJoinMatch()">Spiel beitreten</button>
             <button onclick="showLobby()">Öffentliche Spiele durchsuchen</button>
@@ -898,6 +1622,51 @@
             <input type="password" id="match-password" placeholder="Passwort (optional)" class="hidden">
             <button onclick="createMatch()" class="primary-btn">Spiel erstellen</button>
             <button onclick="showMainMenu()">Zurück</button>
+        </div>
+        
+        <!-- Avatar Selector -->
+        <div id="avatar-selector" class="avatar-selector-container hidden">
+            <h2>🎨 Avatar auswählen</h2>
+            
+            <div class="avatar-selector-layout">
+                <!-- Left Column: Avatar Selection -->
+                <div class="avatar-column">
+                    <h3>Avatar wählen</h3>
+                    <div class="avatar-type-buttons">
+                        <button id="btn-standard" class="avatar-type-btn active" onclick="selectAvatarType('standard')">Standard</button>
+                        <button id="btn-männlich" class="avatar-type-btn" onclick="selectAvatarType('männlich')">Männlich</button>
+                        <button id="btn-weiblich" class="avatar-type-btn" onclick="selectAvatarType('weiblich')">Weiblich</button>
+                    </div>
+                    <div id="avatar-grid" class="avatar-grid">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Center Column: Preview -->
+                <div class="preview-column">
+                    <h3>Vorschau</h3>
+                    <div class="avatar-container large">
+                        <img id="preview-avatar-img" src="/images/avatare/standard.png" alt="Avatar-Vorschau">
+                        <img id="preview-frame-img" class="avatar-frame hidden" alt="Rahmen-Vorschau">
+                    </div>
+                </div>
+                
+                <!-- Right Column: Frame Selection -->
+                <div class="frame-column">
+                    <h3>Rahmen (Optional)</h3>
+                    <div id="frame-grid" class="frame-grid">
+                        <div class="frame-option active" onclick="selectFrame(0)">
+                            <span>Kein Rahmen</span>
+                        </div>
+                        <!-- Frames 1-7 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="avatar-actions">
+                <button onclick="saveAvatar()" class="primary-btn">Avatar speichern</button>
+                <button onclick="showMainMenu()">Abbrechen</button>
+            </div>
         </div>
         
         <!-- Stats Screen -->
@@ -967,16 +1736,10 @@
             <button onclick="leaveMatch()" class="danger">Spiel verlassen</button>
         </div>
 
-        <!-- Players List (positioned at right edge, outside of game card) -->
+        <!-- Players List (positioned at screen edge, outside of game card) -->
         <div id="game-players-list" class="game-players-list">
             <h4>Spieler:</h4>
             <div id="game-players-display"></div>
-        </div>
-
-        <!-- Completed Rounds Sidebar (positioned at left edge) -->
-        <div id="completed-rounds-sidebar" class="completed-rounds-sidebar">
-            <h4>Abgeschlossene Runden</h4>
-            <div id="completed-rounds-display"></div>
         </div>
 
         <!-- Game Screen -->
@@ -985,9 +1748,30 @@
                 ← Menü
             </button>
             
-            <div class="game-info">
+            <div class="game-info" id="game-info">
                 <p>Runde: <span id="current-round">1</span></p>
                 <p>Aktueller Spieler: <span id="current-player"></span></p>
+            </div>
+            
+            <!-- Voting Section (hidden by default, shown during voting) -->
+            <div id="voting-section" class="hidden">
+                <h3>Abstimmung</h3>
+                <div id="continue-voting-inline" class="hidden">
+                    <p>Was möchtet ihr machen?</p>
+                    <div class="vote-options">
+                        <button onclick="vote('continue')">Weiterspielen</button>
+                        <button onclick="vote('guess')">Imposter erraten</button>
+                    </div>
+                </div>
+                
+                <div id="imposter-voting-inline" class="hidden">
+                    <p>Wer ist der Imposter?</p>
+                    <div class="player-vote-grid" id="vote-players-inline"></div>
+                </div>
+                
+                <div id="voting-status-inline">
+                    <p>Warten auf alle Stimmen...</p>
+                </div>
             </div>
             
             <div class="word-display">
@@ -1029,7 +1813,28 @@
             </div>
         </div>
         
-        <!-- Game Finished -->
+        <!-- Game Finished Overlay -->
+        <div id="game-finished-overlay" class="countdown-overlay">
+            <div class="game-finished-window">
+                <div class="game-result-icon" id="game-result-icon">🎭</div>
+                <div class="game-result-title" id="game-result-title">Spiel beendet!</div>
+                <div class="game-result-content" id="game-result-content">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                <div class="game-result-word" id="game-result-word">
+                    Das Wort war: <span id="result-word"></span>
+                </div>
+                <div class="return-countdown">
+                    <div class="countdown-bar-container">
+                        <div class="countdown-bar" id="return-countdown-bar"></div>
+                    </div>
+                    <p>Automatische Rückkehr zur Lobby in <span id="return-timer">15</span> Sekunden</p>
+                    <button onclick="returnToLobbyManually()" class="return-btn">Sofort zur Lobby</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Finished (Old Version - Keep as fallback) -->
         <div id="game-finished" class="card hidden">
             <h2>Spiel beendet!</h2>
             <div id="game-result"></div>
@@ -1039,13 +1844,17 @@
             <button onclick="returnToLobbyManually()" class="primary-btn">Sofort zur Lobby</button>
             <button onclick="showMainMenu()">Hauptmenü</button>
         </div>
-        
+
         <!-- Error Messages -->
         <div id="error-message" class="error hidden"></div>
         <div id="success-message" class="success hidden"></div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Messages Container (fixed position) -->
+    <div id="messages-container">
+        <div id="error-message-fixed" class="error-fixed hidden"></div>
+        <div id="success-message-fixed" class="success-fixed hidden"></div>
+    </div>    <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         
@@ -1053,11 +1862,20 @@
         let isHost = false;
         let playerWord = null;
         let isImposter = false;
+        let isSpectator = false;
         let hasVoted = false; // Track if user has already voted in current voting round
+        let currentVotingType = null; // Track current voting type to detect changes
         let currentPlayerName = null;
         let myPlayerName = null;
         let currentUser = null;
+        let currentUserVIP = false;
         let currentPlayers = []; // Store current players for game screen
+        
+        // Avatar System Variables
+        let selectedAvatarType = 'standard';
+        let selectedAvatarId = 0;
+        let selectedFrame = 0;
+        let currentUserAvatar = { type: 'standard', id: 0, frame: 0 };
         
         // URL Routing System
         function updateURL(matchId = null) {
@@ -1107,13 +1925,25 @@
             const savedUser = localStorage.getItem('imposterUser');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
+                currentUserVIP = currentUser.vip || false;
                 myPlayerName = currentUser.username;
                 
-                // Automatically login with socket
+                // Load avatar data
+                if (currentUser.avatar) {
+                    currentUserAvatar = currentUser.avatar;
+                } else {
+                    // Fallback for users without avatar data
+                    currentUserAvatar = { type: 'standard', id: 0, frame: 0 };
+                }
+                
+                // Automatically login with socket to refresh user data
                 socket.emit('user_login', { 
                     username: currentUser.username, 
                     password: localStorage.getItem('imposterPassword') || '' 
                 });
+                
+                // Refresh user data from server to get latest VIP status
+                refreshUserData();
                 
                 showUserInterface();
                 
@@ -1204,6 +2034,7 @@
                 
                 if (result.success) {
                     currentUser = result.user;
+                    currentUserVIP = result.user.vip || false;
                     myPlayerName = result.user.username;
                     localStorage.setItem('imposterUser', JSON.stringify(result.user));
                     localStorage.setItem('imposterPassword', password); // Store password for socket login
@@ -1241,6 +2072,280 @@
             // Update user profile display
             document.getElementById('username-display').textContent = currentUser.username;
             updateStatsDisplay(currentUser.stats);
+            
+            // Load and display current user avatar
+            if (currentUser.avatar) {
+                currentUserAvatar = currentUser.avatar;
+                updateCurrentAvatarDisplay();
+            }
+        }
+        
+        // Refresh user data from server
+        async function refreshUserData() {
+            if (!currentUser) return;
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        username: currentUser.username, 
+                        password: localStorage.getItem('imposterPassword') || '' 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentUser = result.user;
+                    currentUserVIP = result.user.vip || false;
+                    localStorage.setItem('imposterUser', JSON.stringify(result.user));
+                    
+                    // Update avatar data if available
+                    if (result.user.avatar) {
+                        currentUserAvatar = result.user.avatar;
+                    }
+                    
+                    console.log('User data refreshed, VIP status:', currentUserVIP);
+                }
+            } catch (error) {
+                console.error('Error refreshing user data:', error);
+            }
+        }
+        
+        // Avatar System Functions
+        function showAvatarSelector() {
+            hideAllScreens();
+            document.getElementById('avatar-selector').classList.remove('hidden');
+            
+            // Initialize avatar selector with current user avatar
+            selectedAvatarType = currentUserAvatar.type;
+            selectedAvatarId = currentUserAvatar.id;
+            selectedFrame = currentUserAvatar.frame;
+            
+            // Update UI
+            updateAvatarTypeButtons();
+            loadAvatarGrid();
+            loadFrameGrid();
+            updateAvatarPreview();
+        }
+        
+        function selectAvatarType(type) {
+            selectedAvatarType = type;
+            selectedAvatarId = type === 'standard' ? 0 : 1; // Default to first avatar of selected type
+            updateAvatarTypeButtons();
+            loadAvatarGrid();
+            updateAvatarPreview();
+        }
+        
+        function updateAvatarTypeButtons() {
+            const buttons = document.querySelectorAll('.avatar-type-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.id === `btn-${selectedAvatarType}`) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+        
+        function loadAvatarGrid() {
+            const grid = document.getElementById('avatar-grid');
+            grid.innerHTML = '';
+            
+            if (selectedAvatarType === 'standard') {
+                // Standard avatar (only one option)
+                const option = document.createElement('div');
+                option.className = selectedAvatarId === 0 ? 'avatar-option active' : 'avatar-option';
+                option.innerHTML = '<img src="/images/avatare/standard.png" alt="Standard Avatar">';
+                option.onclick = () => selectAvatar(0);
+                grid.appendChild(option);
+            } else {
+                // Gender-specific avatars (1-20)
+                for (let i = 1; i <= 20; i++) {
+                    const option = document.createElement('div');
+                    option.className = selectedAvatarId === i ? 'avatar-option active' : 'avatar-option';
+                    option.innerHTML = `<img src="/images/avatare/${selectedAvatarType}/${i}.png" alt="Avatar ${i}">`;
+                    option.onclick = () => selectAvatar(i);
+                    grid.appendChild(option);
+                }
+            }
+        }
+        
+        function loadFrameGrid() {
+            console.log('Loading frame grid. Current VIP status:', currentUserVIP);
+            const grid = document.getElementById('frame-grid');
+            grid.innerHTML = '';
+            
+            // No frame option
+            const noFrame = document.createElement('div');
+            noFrame.className = selectedFrame === 0 ? 'frame-option active' : 'frame-option';
+            noFrame.innerHTML = '<span>Kein Rahmen</span>';
+            noFrame.onclick = () => selectFrame(0);
+            grid.appendChild(noFrame);
+            
+            // Frame options 1-7
+            for (let i = 1; i <= 7; i++) {
+                const option = document.createElement('div');
+                option.className = selectedFrame === i ? 'frame-option active' : 'frame-option';
+                option.innerHTML = `<img src="/images/avatare/rahmen/${i}.png" alt="Rahmen ${i}">`;
+                option.onclick = () => selectFrame(i);
+                grid.appendChild(option);
+            }
+            
+            // Rainbow frame (VIP only)
+            const rainbowFrame = document.createElement('div');
+            rainbowFrame.className = selectedFrame === 'rainbow' ? 'frame-option active' : 'frame-option';
+            if (!currentUserVIP) {
+                rainbowFrame.classList.add('vip-locked');
+            }
+            rainbowFrame.innerHTML = `<img src="/images/avatare/rahmen/admin/rainbow.gif" alt="Rainbow Rahmen (VIP)"><div class="vip-badge">VIP</div>`;
+            rainbowFrame.onclick = () => {
+                console.log('Rainbow frame clicked. Current VIP status:', currentUserVIP);
+                if (currentUserVIP) {
+                    selectFrame('rainbow');
+                } else {
+                    showError('Dieser Rahmen ist nur für VIP-Benutzer verfügbar!');
+                }
+            };
+            grid.appendChild(rainbowFrame);
+        }
+        
+        function selectAvatar(id) {
+            selectedAvatarId = id;
+            loadAvatarGrid(); // Refresh grid to update active state
+            updateAvatarPreview();
+        }
+        
+        function selectFrame(frameId) {
+            selectedFrame = frameId;
+            loadFrameGrid(); // Refresh grid to update active state
+            updateAvatarPreview();
+        }
+        
+        function updateAvatarPreview() {
+            const avatarImg = document.getElementById('preview-avatar-img');
+            const frameImg = document.getElementById('preview-frame-img');
+            
+            // Update avatar image
+            if (selectedAvatarType === 'standard') {
+                avatarImg.src = '/images/avatare/standard.png';
+            } else {
+                avatarImg.src = `/images/avatare/${selectedAvatarType}/${selectedAvatarId}.png`;
+            }
+            
+            // Update frame
+            if (selectedFrame === 0) {
+                frameImg.classList.add('hidden');
+            } else if (selectedFrame === 'rainbow') {
+                frameImg.src = '/images/avatare/rahmen/admin/rainbow.gif';
+                frameImg.classList.remove('hidden');
+            } else {
+                frameImg.src = `/images/avatare/rahmen/${selectedFrame}.png`;
+                frameImg.classList.remove('hidden');
+            }
+        }
+        
+        function updateCurrentAvatarDisplay() {
+            const avatarImg = document.getElementById('current-avatar-img');
+            const frameImg = document.getElementById('current-frame-img');
+            
+            // Update avatar image
+            if (currentUserAvatar.type === 'standard') {
+                avatarImg.src = '/images/avatare/standard.png';
+            } else {
+                avatarImg.src = `/images/avatare/${currentUserAvatar.type}/${currentUserAvatar.id}.png`;
+            }
+            
+            // Update frame
+            if (currentUserAvatar.frame === 0) {
+                frameImg.classList.add('hidden');
+            } else if (currentUserAvatar.frame === 'rainbow') {
+                frameImg.src = '/images/avatare/rahmen/admin/rainbow.gif';
+                frameImg.classList.remove('hidden');
+            } else {
+                frameImg.src = `/images/avatare/rahmen/${currentUserAvatar.frame}.png`;
+                frameImg.classList.remove('hidden');
+            }
+        }
+        
+        async function saveAvatar() {
+            try {
+                const response = await fetch('/api/update-avatar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: currentUser.username,
+                        avatar: {
+                            type: selectedAvatarType,
+                            id: selectedAvatarId,
+                            frame: selectedFrame
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update current user avatar
+                    currentUserAvatar = result.avatar;
+                    currentUser.avatar = result.avatar;
+                    
+                    // Update localStorage
+                    localStorage.setItem('imposterUser', JSON.stringify(currentUser));
+                    
+                    // Update display
+                    updateCurrentAvatarDisplay();
+                    
+                    showSuccess('Avatar erfolgreich gespeichert!');
+                    setTimeout(() => {
+                        showMainMenu();
+                    }, 1500);
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                showError('Fehler beim Speichern des Avatars');
+            }
+        }
+        
+        function getAvatarImagePath(avatar) {
+            // Fallback für undefinierte oder null avatars
+            if (!avatar) {
+                return '/images/avatare/standard.png';
+            }
+            
+            if (avatar.type === 'standard' || !avatar.type) {
+                return '/images/avatare/standard.png';
+            }
+            
+            // Prüfe auf gültige Avatar-ID
+            if (!avatar.id || avatar.id < 1 || avatar.id > 20) {
+                console.warn('Invalid avatar ID:', avatar.id, 'for type:', avatar.type, 'falling back to standard');
+                return '/images/avatare/standard.png';
+            }
+            
+            return `/images/avatare/${avatar.type}/${avatar.id}.png`;
+        }
+        
+        function getFrameImagePath(avatar) {
+            if (!avatar || !avatar.frame || avatar.frame === 0) {
+                return null;
+            }
+            if (avatar.frame === 'rainbow') {
+                return '/images/avatare/rahmen/admin/rainbow.gif';
+            }
+            
+            // Prüfe auf gültige Frame-ID
+            if (avatar.frame < 1 || avatar.frame > 7) {
+                console.warn('Invalid frame ID:', avatar.frame, 'returning null');
+                return null;
+            }
+            
+            return `/images/avatare/rahmen/${avatar.frame}.png`;
         }
         
         function updateStatsDisplay(stats) {
@@ -1272,7 +2377,6 @@
         // UI Functions
         function showMainMenu() {
             hideAllScreens();
-            hideCompletedRoundsSidebar(); // Hide sidebar when returning to main menu
             document.getElementById('main-menu').classList.remove('hidden');
             // Show user profile if logged in
             if (currentUser) {
@@ -1300,13 +2404,12 @@
         }
         
         function hideAllScreens() {
-            const screens = ['main-menu', 'create-match', 'join-match', 'lobby-screen', 'waiting-room', 'game-screen', 'voting-screen', 'game-finished', 'stats-screen'];
+            const screens = ['main-menu', 'create-match', 'join-match', 'lobby-screen', 'waiting-room', 'game-screen', 'voting-screen', 'game-finished', 'stats-screen', 'avatar-selector'];
             screens.forEach(screen => {
                 document.getElementById(screen).classList.add('hidden');
             });
             hideError();
             hideGamePlayersList(); // Hide players list when switching screens
-            // Note: Don't hide completed rounds sidebar here, it should persist during voting
         }
         
         function showGamePlayersList() {
@@ -1320,20 +2423,6 @@
             const playersList = document.getElementById('game-players-list');
             if (playersList) {
                 playersList.style.display = 'none';
-            }
-        }
-        
-        function showCompletedRoundsSidebar() {
-            const sidebar = document.getElementById('completed-rounds-sidebar');
-            if (sidebar) {
-                sidebar.style.display = 'block';
-            }
-        }
-        
-        function hideCompletedRoundsSidebar() {
-            const sidebar = document.getElementById('completed-rounds-sidebar');
-            if (sidebar) {
-                sidebar.style.display = 'none';
             }
         }
         
@@ -1367,13 +2456,39 @@
                     playerElement.classList.add('current-player');
                 }
                 
+                // Create avatar container
+                const avatarContainer = document.createElement('div');
+                avatarContainer.className = 'player-avatar avatar-container';
+                
+                const avatarImg = document.createElement('img');
+                avatarImg.src = getAvatarImagePath(player.avatar);
+                avatarImg.alt = `${player.name} Avatar`;
+                avatarContainer.appendChild(avatarImg);
+                
+                // Add frame if exists
+                if (player.avatar && (player.avatar.frame > 0 || player.avatar.frame === 'rainbow')) {
+                    const frameImg = document.createElement('img');
+                    frameImg.src = getFrameImagePath(player.avatar);
+                    frameImg.className = 'avatar-frame';
+                    frameImg.alt = 'Avatar Rahmen';
+                    avatarContainer.appendChild(frameImg);
+                }
+                
+                // Create player name element
+                const playerName = document.createElement('span');
+                playerName.className = 'player-name';
+                
                 // Mark host
                 if (player.isHost) {
                     playerElement.classList.add('host');
-                    playerElement.textContent = `${player.name} (Host)`;
+                    playerName.textContent = `${player.name} (Host)`;
                 } else {
-                    playerElement.textContent = player.name;
+                    playerName.textContent = player.name;
                 }
+                
+                // Assemble player element
+                playerElement.appendChild(avatarContainer);
+                playerElement.appendChild(playerName);
                 
                 // Add title attribute for long names (tooltip)
                 if (player.name.length > 12) {
@@ -1465,7 +2580,6 @@
                 hideAllScreens();
                 document.getElementById('game-screen').classList.remove('hidden');
                 document.getElementById('user-profile').classList.remove('hidden');
-                showGamePlayersList(); // Show players list when game starts
                 
                 // Update players list in game screen (top left)
                 updateGamePlayersList(match.players, match.currentPlayer);
@@ -1483,61 +2597,80 @@
                     });
                 }
                 
-                // Show voting screen if in voting state
+                // Show voting section if in voting state, otherwise show game info
                 if (match.gameState === 'voting_continue' || match.gameState === 'voting_imposter') {
                     hasVoted = false; // Reset voting flag
                     enableVotingButtons(); // Enable buttons
                     
-                    // Hide game screen and show only voting screen
-                    document.getElementById('game-screen').classList.add('hidden');
-                    hideGamePlayersList();
-                    document.getElementById('voting-screen').classList.remove('hidden');
+                    // Hide game info and show voting section
+                    document.getElementById('game-info').classList.add('hidden');
+                    document.getElementById('voting-section').classList.remove('hidden');
+                    
+                    // Always hide word input during voting
+                    document.getElementById('word-input-section').classList.add('hidden');
+                    
                     if (match.gameState === 'voting_continue') {
-                        document.getElementById('continue-voting').classList.remove('hidden');
-                        document.getElementById('imposter-voting').classList.add('hidden');
+                        document.getElementById('continue-voting-inline').classList.remove('hidden');
+                        document.getElementById('imposter-voting-inline').classList.add('hidden');
                     } else {
-                        document.getElementById('continue-voting').classList.add('hidden');
-                        document.getElementById('imposter-voting').classList.remove('hidden');
-                        updateVotingPlayers(match.players);
+                        document.getElementById('continue-voting-inline').classList.add('hidden');
+                        document.getElementById('imposter-voting-inline').classList.remove('hidden');
+                        updateVotingPlayersInline(match.players);
                     }
                     
                     // Update voting status when showing match
                     updateVotingStatus(match.players, match.votes || []);
+                } else {
+                    // Show game info, hide voting section for normal gameplay
+                    document.getElementById('game-info').classList.remove('hidden');
+                    document.getElementById('voting-section').classList.add('hidden');
+                    
+                    // Load and display all rounds data if available
+                    console.log('updateMatchDisplay - allRounds:', match.allRounds);
+                    if (match.allRounds && match.allRounds.length > 0) {
+                        allRounds = match.allRounds;
+                        console.log('updateMatchDisplay - allRounds loaded, calling displayAllRounds');
+                        // Force display all rounds with a small delay to ensure DOM is ready
+                        setTimeout(() => {
+                            console.log('Delayed displayAllRounds call from updateMatchDisplay');
+                            displayAllRounds();
+                        }, 100);
+                    }
                 }
             }
         }
         
         function showError(message) {
-            const errorDiv = document.getElementById('error-message');
+            // Hide old message first
+            const oldError = document.getElementById('error-message-fixed');
+            const oldSuccess = document.getElementById('success-message-fixed');
+            oldError.classList.add('hidden');
+            oldSuccess.classList.add('hidden');
+            
+            // Show new error message
+            const errorDiv = document.getElementById('error-message-fixed');
             errorDiv.textContent = message;
             errorDiv.classList.remove('hidden');
             setTimeout(() => errorDiv.classList.add('hidden'), 5000);
         }
         
         function showSuccess(message) {
-            const successDiv = document.getElementById('success-message');
-            if (successDiv) {
-                successDiv.textContent = message;
-                successDiv.classList.remove('hidden');
-                setTimeout(() => successDiv.classList.add('hidden'), 5000);
-            } else {
-                // Fallback: use error div with green styling
-                const errorDiv = document.getElementById('error-message');
-                errorDiv.textContent = message;
-                errorDiv.style.background = 'linear-gradient(135deg, rgba(76, 175, 80, 0.9) 0%, rgba(56, 142, 60, 0.9) 100%)';
-                errorDiv.style.borderColor = 'rgba(76, 175, 80, 0.5)';
-                errorDiv.classList.remove('hidden');
-                setTimeout(() => {
-                    errorDiv.classList.add('hidden');
-                    // Reset to error styling
-                    errorDiv.style.background = '';
-                    errorDiv.style.borderColor = '';
-                }, 5000);
-            }
+            // Hide old message first
+            const oldError = document.getElementById('error-message-fixed');
+            const oldSuccess = document.getElementById('success-message-fixed');
+            oldError.classList.add('hidden');
+            oldSuccess.classList.add('hidden');
+            
+            // Show new success message
+            const successDiv = document.getElementById('success-message-fixed');
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            setTimeout(() => successDiv.classList.add('hidden'), 5000);
         }
         
         function hideError() {
-            document.getElementById('error-message').classList.add('hidden');
+            document.getElementById('error-message-fixed').classList.add('hidden');
+            document.getElementById('success-message-fixed').classList.add('hidden');
         }
         
         // Private match checkbox
@@ -1554,20 +2687,48 @@
         // Game Functions
         let isCreatingMatch = false; // Prevent multiple simultaneous create attempts
         
+        // Debug functions for console testing
+        window.debugCreateMatch = function() {
+            console.log('=== Debug Create Match ===');
+            console.log('currentUser:', currentUser);
+            console.log('isCreatingMatch:', isCreatingMatch);
+            console.log('socket.connected:', socket.connected);
+            console.log('=========================');
+            if (isCreatingMatch) {
+                console.log('Resetting isCreatingMatch flag...');
+                isCreatingMatch = false;
+            }
+            createMatch();
+        };
+        
+        window.resetFlags = function() {
+            console.log('Resetting all flags...');
+            isCreatingMatch = false;
+            currentMatchId = null;
+            isHost = false;
+            console.log('Flags reset:', { isCreatingMatch, currentMatchId, isHost });
+        };
+        
         function createMatch() {
+            console.log('createMatch() called. Current user:', currentUser, 'isCreatingMatch:', isCreatingMatch);
+            
             if (!currentUser) {
                 showError('Du musst eingeloggt sein');
                 return;
             }
             
             if (isCreatingMatch) {
+                console.log('Match creation already in progress, returning');
                 return;
             }
             
+            console.log('Starting match creation...');
             isCreatingMatch = true;
             
             const isPrivate = document.getElementById('private-match').checked;
             const password = document.getElementById('match-password').value;
+            
+            console.log('Sending create_match event:', { isPrivate, password: isPrivate ? password : null });
             
             socket.emit('create_match', {
                 isPrivate: isPrivate,
@@ -1611,8 +2772,163 @@
                 showError('Mindestens 4 Spieler werden benötigt um zu starten');
                 return;
             }
+
+            // Send start countdown event to all players
+            socket.emit('start_countdown');
+        }
+        
+        function showCountdown(word, isImposter) {
+            const countdownOverlay = document.getElementById('countdown-overlay');
+            const countdownTitle = document.getElementById('countdown-title');
+            const countdownNumber = document.getElementById('countdown-number');
+            const countdownCircle = document.getElementById('countdown-circle');
+            const wordDisplay = document.getElementById('word-display');
+            const wordTitle = document.getElementById('word-title');
+            const wordText = document.getElementById('word-text');
             
-            socket.emit('start_game');
+            // Hide lobby/waiting room when countdown starts
+            hideAllScreens();
+            
+            // Show countdown overlay
+            countdownOverlay.classList.add('show');
+            
+            // Phase 1: Countdown (5 seconds)
+            let countdown = 5;
+            countdownNumber.textContent = countdown;
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    countdownNumber.textContent = countdown;
+                } else {
+                    clearInterval(countdownInterval);
+                    
+                    // Phase 2: Show word (3 seconds)
+                    showWordPhase(word, isImposter, countdownTitle, countdownCircle, wordDisplay, wordTitle, wordText, countdownOverlay);
+                }
+            }, 1000);
+        }
+        
+        function showWordPhase(word, isImposter, countdownTitle, countdownCircle, wordDisplay, wordTitle, wordText, countdownOverlay) {
+            // Hide countdown elements
+            countdownTitle.style.display = 'none';
+            countdownCircle.style.display = 'none';
+            
+            // Show word display
+            wordDisplay.style.display = 'block';
+            
+            if (isImposter) {
+                wordTitle.textContent = 'Du bist der Imposter!';
+                wordText.textContent = word || 'Finde das geheime Wort';
+                wordText.classList.add('imposter');
+            } else {
+                wordTitle.textContent = 'Dein Wort:';
+                wordText.textContent = word || 'Kein Wort';
+                wordText.classList.remove('imposter');
+            }
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                countdownOverlay.classList.remove('show');
+                
+                // Reset for next time
+                setTimeout(() => {
+                    countdownTitle.style.display = 'block';
+                    countdownTitle.textContent = 'Spiel startet gleich...';
+                    countdownCircle.style.display = 'flex';
+                    wordDisplay.style.display = 'none';
+                    wordText.classList.remove('imposter');
+                }, 300);
+            }, 3000);
+        }
+        
+        function showGameFinishedOverlay(data) {
+            console.log('Showing game finished overlay with data:', data);
+            
+            // Play sound effect
+            try {
+                const audio = new Audio('/sounds/reveal.mp3');
+                audio.volume = 0.7;
+                audio.play().catch(e => console.log('Could not play sound:', e));
+            } catch (e) {
+                console.log('Sound playback error:', e);
+            }
+            
+            const overlay = document.getElementById('game-finished-overlay');
+            const icon = document.getElementById('game-result-icon');
+            const title = document.getElementById('game-result-title');
+            const content = document.getElementById('game-result-content');
+            const wordElement = document.getElementById('result-word');
+            const timerElement = document.getElementById('return-timer');
+            const countdownBar = document.getElementById('return-countdown-bar');
+            
+            // Hide all other screens
+            hideAllScreens();
+            
+            // Set content based on game result
+            if (data.imposterWon) {
+                icon.textContent = '🎭';
+                title.textContent = 'Der Imposter hat gewonnen!';
+                title.style.background = 'linear-gradient(45deg, #ff6b6b, #ee5a24)';
+                title.style.webkitBackgroundClip = 'text';
+                title.style.webkitTextFillColor = 'transparent';
+                title.style.backgroundClip = 'text';
+                
+                content.innerHTML = `
+                    <h3>🎭 Sieg für den Imposter!</h3>
+                    <p>Imposter: <strong>${data.imposter}</strong></p>
+                    ${data.reason ? `<p>Grund: <strong>${data.reason}</strong></p>` : ''}
+                `;
+                
+                // Adjust overlay background for imposter win
+                document.querySelector('.game-finished-window').style.background = 
+                    'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 50%, #ff9ff3 100%)';
+            } else {
+                icon.textContent = '🎉';
+                title.textContent = 'Die Spieler haben gewonnen!';
+                title.style.background = 'linear-gradient(45deg, #4ecdc4, #44a08d)';
+                title.style.webkitBackgroundClip = 'text';
+                title.style.webkitTextFillColor = 'transparent';
+                title.style.backgroundClip = 'text';
+                
+                content.innerHTML = `
+                    <h3>🎉 Sieg für die Spieler!</h3>
+                    <p>Der Imposter <strong>${data.imposter}</strong> wurde entlarvt!</p>
+                    ${data.reason ? `<p>Grund: <strong>${data.reason}</strong></p>` : ''}
+                `;
+                
+                // Adjust overlay background for players win
+                document.querySelector('.game-finished-window').style.background = 
+                    'linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #96ceb4 100%)';
+            }
+            
+            // Set the word
+            wordElement.textContent = data.word;
+            
+            // Show overlay with animation
+            overlay.classList.add('show');
+            
+            // Start 15-second countdown
+            let timeLeft = 15;
+            timerElement.textContent = timeLeft;
+            countdownBar.style.width = '100%';
+            
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+                
+                // Update progress bar
+                const percentage = (timeLeft / 15) * 100;
+                countdownBar.style.width = percentage + '%';
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    returnToLobbyManually();
+                }
+            }, 1000);
+            
+            // Store interval ID to clear it if user returns manually
+            window.gameFinishedCountdown = countdownInterval;
         }
         
         function submitWord() {
@@ -1632,26 +2948,61 @@
         }
         
         function vote(voteType, targetPlayerId = null) {
+            console.log('Vote function called:', voteType, 'hasVoted before:', hasVoted);
+            
+            // Check if user is a spectator (eliminated player)
+            if (isSpectator) {
+                showError('Zuschauer können nicht abstimmen!');
+                return;
+            }
+            
             // Check if user has already voted
             if (hasVoted) {
                 showError('Du hast bereits abgestimmt!');
                 return;
             }
             
+            // Prevent self-voting when voting for imposter
+            if (voteType === 'imposter' && targetPlayerId) {
+                const currentPlayerName = getPlayerName();
+                const targetPlayer = currentPlayers.find(p => p.id === targetPlayerId);
+                if (targetPlayer && targetPlayer.name === currentPlayerName) {
+                    showError('Du kannst nicht für dich selbst stimmen!');
+                    return;
+                }
+            }
+            
             // Immediately mark user as having voted to prevent double-voting
             hasVoted = true;
+            console.log('Set hasVoted to true');
             
-            // Hide voting options immediately to prevent further voting
+            // Immediately hide voting interfaces to provide instant feedback
             document.getElementById('continue-voting').classList.add('hidden');
             document.getElementById('imposter-voting').classList.add('hidden');
+            document.getElementById('continue-voting-inline').classList.add('hidden');
+            document.getElementById('imposter-voting-inline').classList.add('hidden');
             
+            // Immediately hide ALL player voting buttons when any vote is made
+            const playerVoteButtons = document.querySelectorAll('.vote-player-btn');
+            console.log('Found', playerVoteButtons.length, 'player vote buttons to hide');
+            playerVoteButtons.forEach(button => {
+                button.style.display = 'none';
+            });
+            
+            // Also disable all other voting buttons
+            disableVotingButtons();
+            
+            // Show immediate feedback
+            const votingStatus = document.getElementById('voting-status-inline') || document.getElementById('voting-status');
+            if (votingStatus) {
+                votingStatus.innerHTML = '<p style="color: #90EE90; text-align: center; font-weight: bold;">✅ Stimme wird übertragen...</p>';
+            }
+            
+            // Send vote to server
             socket.emit('submit_vote', {
                 voteType: voteType,
                 targetPlayerId: targetPlayerId
             });
-            
-            // Show feedback that vote was submitted
-            showSuccess('Deine Stimme wurde abgegeben!');
         }
         
         function disableVotingButtons() {
@@ -1670,6 +3021,40 @@
                 button.style.opacity = '0.5';
                 button.style.cursor = 'not-allowed';
             });
+            
+            // Disable inline voting buttons
+            const inlineContinueButtons = document.querySelectorAll('#continue-voting-inline button');
+            inlineContinueButtons.forEach(button => {
+                button.disabled = true;
+                button.style.opacity = '0.5';
+                button.style.cursor = 'not-allowed';
+            });
+            
+            const inlineImposterButtons = document.querySelectorAll('#imposter-voting-inline button');
+            inlineImposterButtons.forEach(button => {
+                button.disabled = true;
+                button.style.opacity = '0.5';
+                button.style.cursor = 'not-allowed';
+            });
+            
+            // Hide player voting buttons completely (redundant but safer)
+            const playerVoteButtons = document.querySelectorAll('.vote-player-btn');
+            playerVoteButtons.forEach(button => {
+                button.style.display = 'none';
+                button.disabled = true;
+            });
+            
+            // Also try hiding by container ID as backup
+            const votePlayersContainer = document.getElementById('vote-players');
+            const votePlayersInlineContainer = document.getElementById('vote-players-inline');
+            if (votePlayersContainer) {
+                const buttons = votePlayersContainer.querySelectorAll('button');
+                buttons.forEach(btn => btn.style.display = 'none');
+            }
+            if (votePlayersInlineContainer) {
+                const buttons = votePlayersInlineContainer.querySelectorAll('button');
+                buttons.forEach(btn => btn.style.display = 'none');
+            }
         }
         
         function enableVotingButtons() {
@@ -1688,10 +3073,52 @@
                 button.style.opacity = '1';
                 button.style.cursor = 'pointer';
             });
+            
+            // Enable inline voting buttons
+            const inlineContinueButtons = document.querySelectorAll('#continue-voting-inline button');
+            inlineContinueButtons.forEach(button => {
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+            });
+            
+            const inlineImposterButtons = document.querySelectorAll('#imposter-voting-inline button');
+            inlineImposterButtons.forEach(button => {
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+            });
+            
+            // Show player voting buttons again
+            const playerVoteButtons = document.querySelectorAll('.vote-player-btn');
+            playerVoteButtons.forEach(button => {
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+                button.style.display = ''; // Reset display to show buttons again
+            });
+            
+            // Also restore visibility by container ID as backup
+            const votePlayersContainer = document.getElementById('vote-players');
+            const votePlayersInlineContainer = document.getElementById('vote-players-inline');
+            if (votePlayersContainer) {
+                const buttons = votePlayersContainer.querySelectorAll('button');
+                buttons.forEach(btn => {
+                    btn.style.display = '';
+                    btn.disabled = false;
+                });
+            }
+            if (votePlayersInlineContainer) {
+                const buttons = votePlayersInlineContainer.querySelectorAll('button');
+                buttons.forEach(btn => {
+                    btn.style.display = '';
+                    btn.disabled = false;
+                });
+            }
         }
         
         function updateVotingStatus(players, votes) {
-            const votingStatus = document.getElementById('voting-status');
+            const votingStatus = document.getElementById('voting-status-inline') || document.getElementById('voting-status');
             if (!votingStatus) return;
             
             if (!players || !Array.isArray(players)) return;
@@ -1716,8 +3143,8 @@
             }
             
             if (notVoted.length > 0) {
-                statusHTML += '<p style="color: #FFB6C1; margin: 5px 0;"><strong>⏳ Warten auf:</strong></p>';
-                statusHTML += '<p style="color: #FFB6C1; margin: 0 0 10px 20px;">' + notVoted.join(', ') + '</p>';
+                statusHTML += '<p style="color: #fff; margin: 5px 0;"><strong>⏳ Warten auf:</strong></p>';
+                statusHTML += '<p style="color: #fff; margin: 0 0 10px 20px;">' + notVoted.join(', ') + '</p>';
             }
             
             if (notVoted.length === 0) {
@@ -1735,6 +3162,7 @@
             // Reset all local state immediately
             currentMatchId = null;
             isHost = false;
+            isSpectator = false; // Reset spectator status
             myPlayerName = null;
             currentPlayers = [];
             window.createdThisMatch = false;
@@ -1761,6 +3189,18 @@
         }
         
         function returnToLobbyManually() {
+            // Clear the game finished countdown if it's running
+            if (window.gameFinishedCountdown) {
+                clearInterval(window.gameFinishedCountdown);
+                window.gameFinishedCountdown = null;
+            }
+            
+            // Hide the game finished overlay if it's showing
+            const overlay = document.getElementById('game-finished-overlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+            
             if (currentMatchId) {
                 hideAllScreens();
                 document.getElementById('waiting-room').classList.remove('hidden');
@@ -1878,26 +3318,50 @@
             updateStartGameButton();
         });
         
+        socket.on('countdown_started', (data) => {
+            console.log('Countdown started for all players with data:', data);
+            showCountdown(data.word, data.isImposter);
+        });
+        
         socket.on('game_started', (data) => {
             console.log('game_started event received:', data);
             playerWord = data.word;
             isImposter = data.isImposter;
+            
+            // IMPORTANT: Set spectator status from server data - DO NOT reset to false automatically
+            if (data.spectatorMode !== undefined) {
+                isSpectator = data.spectatorMode;
+                console.log('Setting isSpectator from server:', isSpectator);
+            }
+            
             currentPlayerName = data.currentPlayer;
             
             // Reset rounds when game starts
             allRounds = [];
             
-            document.getElementById('player-word').textContent = data.word;
-            document.getElementById('player-word').className = data.isImposter ? 'imposter-word' : '';
+            // Update word display based on spectator status
+            if (isSpectator) {
+                document.getElementById('player-word').textContent = 'Zuschauer-Modus';
+                document.getElementById('player-word').className = 'spectator-word';
+                
+                // Immediately hide ALL voting and input interfaces for spectators
+                document.getElementById('voting-section').classList.add('hidden');
+                document.getElementById('continue-voting').classList.add('hidden');
+                document.getElementById('imposter-voting').classList.add('hidden');
+                document.getElementById('continue-voting-inline').classList.add('hidden');
+                document.getElementById('imposter-voting-inline').classList.add('hidden');
+                document.getElementById('word-input-section').classList.add('hidden');
+            } else {
+                document.getElementById('player-word').textContent = data.word;
+                document.getElementById('player-word').className = data.isImposter ? 'imposter-word' : '';
+            }
+            
             document.getElementById('current-player').textContent = data.currentPlayer;
             document.getElementById('current-round').textContent = data.round;
             
             hideAllScreens();
             document.getElementById('game-screen').classList.remove('hidden');
             showGamePlayersList(); // Show players list when game starts
-            
-            // Reset completed rounds sidebar when new game starts
-            hideCompletedRoundsSidebar();
             
             // Debug: Check if element exists
             setTimeout(() => {
@@ -1922,8 +3386,8 @@
                 }, 200);
             }
             
-            // Show input if it's player's turn
-            if (data.currentPlayer === getPlayerName()) {
+            // Show input if it's player's turn (but not for spectators)
+            if (data.currentPlayer === getPlayerName() && !isSpectator) {
                 document.getElementById('word-input-section').classList.remove('hidden');
             } else {
                 document.getElementById('word-input-section').classList.add('hidden');
@@ -1932,28 +3396,63 @@
         
         socket.on('word_submitted', (data) => {
             console.log('word_submitted event received:', data);
+            
+            // Spectators should not participate in voting
+            if (isSpectator) {
+                console.log('Spectator detected - only updating words list, no voting UI');
+                // Update with all rounds data from server
+                if (data.allRounds) {
+                    allRounds = data.allRounds;
+                }
+                // Only update words list for spectators
+                updateWordsList(data.words, data.round);
+                // Ensure ALL voting interfaces are hidden for spectators
+                document.getElementById('voting-section').classList.add('hidden');
+                document.getElementById('continue-voting').classList.add('hidden');
+                document.getElementById('imposter-voting').classList.add('hidden');
+                document.getElementById('continue-voting-inline').classList.add('hidden');
+                document.getElementById('imposter-voting-inline').classList.add('hidden');
+                document.getElementById('word-input-section').classList.add('hidden');
+                return;
+            }
+            
             // Update with all rounds data from server
             if (data.allRounds) {
                 allRounds = data.allRounds;
             }
             
-            // Check if voting has started and hide game screen immediately
+            // Always update the words list first, even if voting is starting
+            updateWordsList(data.words, data.round);
+            
+            // Check if voting has started and show voting section
             if (data.gameState === 'voting_continue' || data.gameState === 'voting_imposter') {
-                // This is a new voting round starting, reset the voting flag
-                hasVoted = false;
+                // Check if this is a new voting type (different from before)
+                if (currentVotingType !== data.gameState) {
+                    console.log('New voting type detected:', data.gameState, 'previous:', currentVotingType);
+                    currentVotingType = data.gameState;
+                    hasVoted = false; // Reset for new voting type
+                }
                 
-                document.getElementById('game-screen').classList.add('hidden');
-                hideGamePlayersList();
-                // Keep completed rounds sidebar visible during voting
-                document.getElementById('voting-screen').classList.remove('hidden');
+                if (!hasVoted) {
+                    // Hide game info and show voting section
+                    document.getElementById('game-info').classList.add('hidden');
+                    document.getElementById('voting-section').classList.remove('hidden');
+                }
+                
+                // Always hide word input during voting
+                document.getElementById('word-input-section').classList.add('hidden');
                 
                 if (data.gameState === 'voting_continue') {
-                    document.getElementById('continue-voting').classList.remove('hidden');
-                    document.getElementById('imposter-voting').classList.add('hidden');
+                    if (!hasVoted && !isSpectator) {
+                        document.getElementById('continue-voting-inline').classList.remove('hidden');
+                    }
+                    document.getElementById('imposter-voting-inline').classList.add('hidden');
                 } else {
-                    document.getElementById('continue-voting').classList.add('hidden');
-                    document.getElementById('imposter-voting').classList.remove('hidden');
-                    updateVotingPlayers(data.players);
+                    document.getElementById('continue-voting-inline').classList.add('hidden');
+                    if (!hasVoted && !isSpectator) {
+                        document.getElementById('imposter-voting-inline').classList.remove('hidden');
+                        updateVotingPlayersInline(data.players);
+                    }
                 }
                 
                 // Initialize voting status (no votes yet at start)
@@ -1962,7 +3461,6 @@
                 return; // Don't continue with normal word display logic
             }
             
-            updateWordsList(data.words, data.round);
             currentPlayerName = data.currentPlayer;
             
             // Update players list with current player highlight
@@ -1983,8 +3481,10 @@
                 document.getElementById('current-player').textContent = data.currentPlayer;
                 document.getElementById('current-round').textContent = data.round;
                 
-                if (data.currentPlayer === getPlayerName()) {
+                if (data.currentPlayer === getPlayerName() && !isSpectator) {
                     document.getElementById('word-input-section').classList.remove('hidden');
+                } else {
+                    document.getElementById('word-input-section').classList.add('hidden');
                 }
             }
             
@@ -1998,84 +3498,104 @@
         });
         
         socket.on('vote_updated', (data) => {
+            // Spectators should not see voting interfaces
+            if (isSpectator) {
+                console.log('Spectator detected - hiding all voting interfaces');
+                document.getElementById('voting-section').classList.add('hidden');
+                document.getElementById('continue-voting').classList.add('hidden');
+                document.getElementById('imposter-voting').classList.add('hidden');
+                document.getElementById('continue-voting-inline').classList.add('hidden');
+                document.getElementById('imposter-voting-inline').classList.add('hidden');
+                document.getElementById('word-input-section').classList.add('hidden');
+                return;
+            }
+            
             // Update with all rounds data from server
             if (data.allRounds) {
                 allRounds = data.allRounds;
             }
             
             if (data.gameState === 'voting_imposter') {
-                // Only reset voting flag and enable buttons if user hasn't voted yet
-                if (!hasVoted) {
-                    enableVotingButtons(); // Enable buttons for new voting round
+                // Check if this is a new voting type
+                if (currentVotingType !== data.gameState) {
+                    console.log('New imposter voting detected, resetting hasVoted');
+                    currentVotingType = data.gameState;
+                    hasVoted = false;
                 }
                 
-                document.getElementById('continue-voting').classList.add('hidden');
                 if (!hasVoted) {
-                    document.getElementById('imposter-voting').classList.remove('hidden');
-                    updateVotingPlayers(data.players);
+                    enableVotingButtons(); // Enable buttons for new voting round
+                    
+                    // Hide game info and show voting section (only for active players)
+                    if (!isSpectator) {
+                        document.getElementById('game-info').classList.add('hidden');
+                        document.getElementById('voting-section').classList.remove('hidden');
+                    }
                 }
-                // Hide game screen during voting and only show voting screen
-                document.getElementById('game-screen').classList.add('hidden');
-                hideGamePlayersList(); // Hide players list during voting
-                // Keep completed rounds sidebar visible during voting
-                document.getElementById('voting-screen').classList.remove('hidden');
+                
+                // Always hide word input during voting
+                document.getElementById('word-input-section').classList.add('hidden');
+                
+                document.getElementById('continue-voting-inline').classList.add('hidden');
+                if (!isSpectator) {
+                    document.getElementById('imposter-voting-inline').classList.remove('hidden');
+                    updateVotingPlayersInline(data.players);
+                }
                 
                 // Update voting status
                 updateVotingStatus(data.players, data.votes);
                 
             } else if (data.gameState === 'voting_continue') {
-                // Only reset voting flag and enable buttons if user hasn't voted yet
+                // Check if this is a new voting type
+                if (currentVotingType !== data.gameState) {
+                    console.log('New continue voting detected, resetting hasVoted');
+                    currentVotingType = data.gameState;
+                    hasVoted = false;
+                }
+                
                 if (!hasVoted) {
                     enableVotingButtons(); // Enable buttons for new voting round
                 }
                 
-                if (!hasVoted) {
-                    document.getElementById('continue-voting').classList.remove('hidden');
+                // Hide game info and show voting section (only for active players)
+                if (!isSpectator) {
+                    document.getElementById('game-info').classList.add('hidden');
+                    document.getElementById('voting-section').classList.remove('hidden');
                 }
-                document.getElementById('imposter-voting').classList.add('hidden');
-                // Hide game screen during voting and only show voting screen
-                document.getElementById('game-screen').classList.add('hidden');
-                hideGamePlayersList(); // Hide players list during voting
-                // Keep completed rounds sidebar visible during voting
-                document.getElementById('voting-screen').classList.remove('hidden');
+                
+                // Always hide word input during voting
+                document.getElementById('word-input-section').classList.add('hidden');
+                
+                if (!hasVoted && !isSpectator) {
+                    document.getElementById('continue-voting-inline').classList.remove('hidden');
+                }
+                document.getElementById('imposter-voting-inline').classList.add('hidden');
                 
                 // Update voting status
                 updateVotingStatus(data.players, data.votes);
             } else if (data.gameState === 'playing') {
                 // Reset voting flag when new game round starts
                 hasVoted = false;
-                // Hide voting screen and show only game screen for new round
-                document.getElementById('voting-screen').classList.add('hidden');
-                document.getElementById('game-screen').classList.remove('hidden');
-                showGamePlayersList(); // Show players list for new round
+                currentVotingType = null; // Reset voting type as well
+                // Hide voting section and show game info for new round (unless spectator)
+                if (!isSpectator) {
+                    document.getElementById('voting-section').classList.add('hidden');
+                    document.getElementById('game-info').classList.remove('hidden');
+                }
                 updateWordsList(data.words, data.round);
                 document.getElementById('current-player').textContent = data.currentPlayer;
                 document.getElementById('current-round').textContent = data.round;
                 
-                if (data.currentPlayer === getPlayerName()) {
+                if (data.currentPlayer === getPlayerName() && !isSpectator) {
                     document.getElementById('word-input-section').classList.remove('hidden');
+                } else {
+                    document.getElementById('word-input-section').classList.add('hidden');
                 }
             }
         });
         
         socket.on('game_finished', (data) => {
-            hideAllScreens();
-            document.getElementById('game-finished').classList.remove('hidden');
-            
-            const resultDiv = document.getElementById('game-result');
-            if (data.imposterWon) {
-                resultDiv.innerHTML = `
-                    <h3>🎭 Der Imposter hat gewonnen!</h3>
-                    <p>Imposter: <strong>${data.imposter}</strong></p>
-                    <p>Das Wort war: <strong>${data.word}</strong></p>
-                `;
-            } else {
-                resultDiv.innerHTML = `
-                    <h3>🎉 Die Spieler haben gewonnen!</h3>
-                    <p>Der Imposter <strong>${data.imposter}</strong> wurde entlarvt!</p>
-                    <p>Das Wort war: <strong>${data.word}</strong></p>
-                `;
-            }
+            showGameFinishedOverlay(data);
         });
         
         socket.on('return_to_lobby', (data) => {
@@ -2098,7 +3618,6 @@
             // Hide game screens and show waiting room
             hideAllScreens();
             hideGamePlayersList();
-            hideCompletedRoundsSidebar(); // Hide sidebar when returning to lobby
             document.getElementById('waiting-room').classList.remove('hidden');
             document.getElementById('user-profile').classList.remove('hidden');
             
@@ -2120,10 +3639,10 @@
             showError(data.message);
             isCreatingMatch = false; // Reset creation flag on error
             
-            // If it's a word submission error, show the input section again
+            // If it's a word submission error, show the input section again (but not for spectators)
             if (data.message.includes('gesuchte Wort') || data.message.includes('target word')) {
                 const currentPlayerName = getPlayerName();
-                if (document.getElementById('current-player').textContent === currentPlayerName) {
+                if (document.getElementById('current-player').textContent === currentPlayerName && !isSpectator) {
                     document.getElementById('word-input-section').classList.remove('hidden');
                 }
             }
@@ -2132,6 +3651,110 @@
             const urlMatchId = getMatchIdFromURL();
             if (urlMatchId && data.message.includes('Match') && (data.message.includes('gefunden') || data.message.includes('found'))) {
                 updateURL(); // Clear URL if match not found
+            }
+        });
+        
+        // Handle when this player gets eliminated
+        socket.on('player_eliminated', (data) => {
+            console.log('This player was eliminated:', data);
+            isSpectator = true; // Mark this player as spectator
+            hasVoted = false; // Reset voting status since they're now a spectator
+            currentVotingType = null; // Reset voting type
+            
+            // Update word display to spectator mode
+            document.getElementById('player-word').textContent = 'Zuschauer-Modus';
+            document.getElementById('player-word').className = 'spectator-word';
+            
+            // Hide all voting interfaces immediately
+            document.getElementById('voting-section').classList.add('hidden');
+            document.getElementById('continue-voting').classList.add('hidden');
+            document.getElementById('imposter-voting').classList.add('hidden');
+            document.getElementById('continue-voting-inline').classList.add('hidden');
+            document.getElementById('imposter-voting-inline').classList.add('hidden');
+            document.getElementById('word-input-section').classList.add('hidden');
+            
+            // Disable all voting buttons to be extra safe
+            disableVotingButtons();
+            
+            // Show spectator message
+            showError('Du wurdest eliminiert und bist jetzt Zuschauer! Du kannst das Spiel weiter beobachten.');
+            
+            // Update game info to show spectator status
+            const gameInfo = document.getElementById('game-info');
+            if (gameInfo) {
+                gameInfo.innerHTML = `
+                    <p style="color: #ff6b6b; font-weight: bold;">🔍 ZUSCHAUER-MODUS</p>
+                    <p>Du beobachtest das Spiel als Zuschauer</p>
+                    <p>Runde: <span id="current-round">${data.currentRound || 'N/A'}</span></p>
+                `;
+                gameInfo.classList.remove('hidden');
+            }
+        });
+        
+        // Handle player elimination update for all players
+        socket.on('player_eliminated_update', (data) => {
+            console.log('Player elimination update received:', data);
+            
+            // Update current players list to reflect eliminated player
+            if (data.players) {
+                currentPlayers = data.players;
+                updateGamePlayersList(data.players, data.currentPlayer);
+            }
+            
+            // Show message about who was eliminated
+            if (data.eliminatedPlayerName) {
+                showSuccess(`${data.eliminatedPlayerName} wurde eliminiert und ist jetzt Zuschauer.`);
+            }
+        });
+        
+        // Handle immediate vote feedback
+        socket.on('vote_submitted', (data) => {
+            if (data.hideVotingInterface) {
+                // Hide all voting interfaces immediately
+                document.getElementById('continue-voting').classList.add('hidden');
+                document.getElementById('imposter-voting').classList.add('hidden');
+                document.getElementById('continue-voting-inline').classList.add('hidden');
+                document.getElementById('imposter-voting-inline').classList.add('hidden');
+                
+                // Disable all voting buttons (including hiding player vote buttons)
+                disableVotingButtons();
+                
+                // Show voting status indicating the player has voted
+                const votingStatus = document.getElementById('voting-status-inline') || document.getElementById('voting-status');
+                if (votingStatus) {
+                    votingStatus.innerHTML = '<p style="color: #90EE90; text-align: center; font-weight: bold;">✅ Du hast abgestimmt! Warten auf andere Spieler...</p>';
+                }
+                
+                // Show the feedback message
+                if (data.message) {
+                    showSuccess(data.message);
+                }
+            }
+        });
+        
+        // Handle voting end
+        socket.on('voting_ended', (data) => {
+            if (data.hideVotingInterface) {
+                // Hide all voting interfaces
+                document.getElementById('voting-screen').classList.add('hidden');
+                document.getElementById('continue-voting').classList.add('hidden');
+                document.getElementById('imposter-voting').classList.add('hidden');
+                document.getElementById('continue-voting-inline').classList.add('hidden');
+                document.getElementById('imposter-voting-inline').classList.add('hidden');
+                document.getElementById('voting-section').classList.add('hidden');
+                
+                // Reset voting state and enable buttons (including showing player vote buttons again)
+                hasVoted = false;
+                currentVotingType = null; // Reset voting type
+                enableVotingButtons();
+                
+                // Show game interface again
+                document.getElementById('game-info').classList.remove('hidden');
+                
+                // Show the feedback message
+                if (data.message) {
+                    showSuccess(data.message);
+                }
             }
         });
         
@@ -2204,12 +3827,64 @@
             const listDiv = document.getElementById('players-list');
             listDiv.innerHTML = '<h3>Spieler (' + players.length + '/8):</h3>';
             
+            console.log('Updating players list with:', players); // Debug
+            
             players.forEach(player => {
+                console.log(`Processing player ${player.name} with avatar:`, player.avatar); // Debug
+                
                 const playerDiv = document.createElement('div');
-                playerDiv.className = 'player' + (player.isHost ? ' host' : '');
-                playerDiv.innerHTML = `
-                    <span>${player.name}${player.isHost ? ' (Host)' : ''}</span>
-                `;
+                playerDiv.className = 'player-item';
+                
+                // Create avatar container
+                const avatarContainer = document.createElement('div');
+                avatarContainer.className = 'player-avatar avatar-container';
+                
+                const avatarImg = document.createElement('img');
+                const avatarPath = getAvatarImagePath(player.avatar);
+                avatarImg.src = avatarPath;
+                avatarImg.alt = `${player.name} Avatar`;
+                
+                // Debug: Log avatar loading
+                console.log(`Loading avatar for ${player.name}:`, player.avatar, '-> path:', avatarPath);
+                
+                // Add error handler for avatar images
+                avatarImg.onerror = function() {
+                    console.error(`Failed to load avatar for ${player.name}:`, this.src);
+                    this.src = '/images/avatare/standard.png'; // Fallback
+                };
+                
+                avatarContainer.appendChild(avatarImg);
+                
+                // Add frame if exists
+                if (player.avatar && (player.avatar.frame > 0 || player.avatar.frame === 'rainbow')) {
+                    const frameImg = document.createElement('img');
+                    frameImg.src = getFrameImagePath(player.avatar);
+                    frameImg.className = 'avatar-frame';
+                    frameImg.alt = 'Avatar Rahmen';
+                    avatarContainer.appendChild(frameImg);
+                }
+                
+                // Create player info
+                const playerInfo = document.createElement('div');
+                playerInfo.className = 'player-info';
+                
+                const playerName = document.createElement('div');
+                playerName.className = 'player-name';
+                playerName.textContent = player.name;
+                
+                if (player.isHost) {
+                    const hostBadge = document.createElement('span');
+                    hostBadge.className = 'host-badge';
+                    hostBadge.textContent = 'Host';
+                    playerName.appendChild(hostBadge);
+                }
+                
+                playerInfo.appendChild(playerName);
+                
+                // Assemble player item
+                playerDiv.appendChild(avatarContainer);
+                playerDiv.appendChild(playerInfo);
+                
                 listDiv.appendChild(playerDiv);
             });
         }
@@ -2218,10 +3893,11 @@
         let allRounds = [];
         
         function updateWordsList(words, round = null) {
-            const listDiv = document.getElementById('words-list');
+            console.log('updateWordsList called with:', { words, round, allRoundsLength: allRounds.length });
             
             // If we have a specific round, update our stored rounds
             if (round && words.length > 0) {
+                console.log('Adding/updating round:', round, 'with words:', words);
                 // Check if this round already exists
                 const existingRoundIndex = allRounds.findIndex(r => r.round === round);
                 if (existingRoundIndex >= 0) {
@@ -2231,28 +3907,41 @@
                 }
             }
             
-            // Clear the main display
-            listDiv.innerHTML = '';
+            // Always refresh the display
+            displayAllRounds();
+        }
+        
+        function displayAllRounds() {
+            console.log('displayAllRounds called, allRounds:', allRounds);
+            const listDiv = document.getElementById('words-list');
+            console.log('words-list element found:', !!listDiv);
             
-            if (allRounds.length === 0) {
+            if (!listDiv) {
+                console.error('words-list element not found!');
                 return;
             }
             
-            // Get current round (highest round number)
-            const currentRoundNum = Math.max(...allRounds.map(r => r.round));
-            const currentRoundData = allRounds.find(r => r.round === currentRoundNum);
+            // Clear the display
+            listDiv.innerHTML = '';
             
-            // Display only current round in the center
-            if (currentRoundData && currentRoundData.words.length > 0) {
+            console.log('Final allRounds before display:', allRounds);
+            if (allRounds.length === 0) {
+                console.log('No rounds to display - allRounds is empty');
+                return;
+            }
+            
+            console.log('About to display', allRounds.length, 'rounds');
+            
+            // Display all rounds (newest first, oldest last)
+            allRounds.slice().reverse().forEach(roundData => {
                 const roundTitle = document.createElement('h3');
-                roundTitle.textContent = `Aktuelle Runde ${currentRoundData.round}:`;
-                roundTitle.style.marginTop = '0px';
-                roundTitle.style.marginBottom = '15px';
+                roundTitle.textContent = `Runde ${roundData.round}:`;
+                roundTitle.style.marginTop = '20px';
+                roundTitle.style.marginBottom = '10px';
                 roundTitle.style.color = '#ffeb3b';
-                roundTitle.style.textAlign = 'center';
                 listDiv.appendChild(roundTitle);
                 
-                currentRoundData.words.forEach(wordEntry => {
+                roundData.words.forEach(wordEntry => {
                     const wordDiv = document.createElement('div');
                     wordDiv.className = 'word-entry';
                     wordDiv.innerHTML = `
@@ -2261,69 +3950,80 @@
                     `;
                     listDiv.appendChild(wordDiv);
                 });
-            }
-            
-            // Update completed rounds sidebar
-            updateCompletedRoundsSidebar();
-        }
-        
-        function updateCompletedRoundsSidebar() {
-            const sidebarDiv = document.getElementById('completed-rounds-display');
-            const sidebar = document.getElementById('completed-rounds-sidebar');
-            
-            // Clear sidebar
-            sidebarDiv.innerHTML = '';
-            
-            if (allRounds.length <= 1) {
-                // Hide sidebar if no completed rounds
-                sidebar.style.display = 'none';
-                return;
-            }
-            
-            // Get current round number
-            const currentRoundNum = Math.max(...allRounds.map(r => r.round));
-            
-            // Get completed rounds (all except current)
-            const completedRounds = allRounds
-                .filter(r => r.round < currentRoundNum)
-                .sort((a, b) => b.round - a.round); // Sort by round number, newest first
-            
-            if (completedRounds.length === 0) {
-                sidebar.style.display = 'none';
-                return;
-            }
-            
-            // Show sidebar
-            sidebar.style.display = 'block';
-            
-            // Display completed rounds
-            completedRounds.forEach(roundData => {
-                const roundDiv = document.createElement('div');
-                roundDiv.className = 'completed-round';
-                
-                const roundTitle = document.createElement('h5');
-                roundTitle.textContent = `Runde ${roundData.round}`;
-                roundDiv.appendChild(roundTitle);
-                
-                roundData.words.forEach(wordEntry => {
-                    const wordDiv = document.createElement('div');
-                    wordDiv.className = 'word-entry-small';
-                    wordDiv.innerHTML = `
-                        <span><strong>${wordEntry.playerName}:</strong></span>
-                        <span>${wordEntry.word}</span>
-                    `;
-                    roundDiv.appendChild(wordDiv);
-                });
-                
-                sidebarDiv.appendChild(roundDiv);
             });
         }
+        
+        // Test function to debug rounds display
+        function testRoundsDisplay() {
+            console.log('Test: Current allRounds:', allRounds);
+            console.log('Test: allRounds length:', allRounds.length);
+            if (allRounds.length > 0) {
+                console.log('Test: Calling displayAllRounds()');
+                displayAllRounds();
+            } else {
+                console.log('Test: No rounds to display');
+            }
+        }
+        
+        // Make test function globally available
+        window.testRoundsDisplay = testRoundsDisplay;
         
         function updateVotingPlayers(players) {
             const voteDiv = document.getElementById('vote-players');
             voteDiv.innerHTML = '';
             
-            players.forEach(player => {
+            // If current user is a spectator, don't show any voting buttons
+            if (isSpectator) {
+                voteDiv.innerHTML = '<p style="color: #666; text-align: center;">Zuschauer können nicht abstimmen</p>';
+                return;
+            }
+            
+            // Don't create buttons if user has already voted
+            if (hasVoted) {
+                voteDiv.innerHTML = '<p style="color: #90EE90; text-align: center; font-weight: bold;">✅ Du hast bereits abgestimmt!</p>';
+                return;
+            }
+            
+            // Filter out spectators (eliminated players) and the current player (can't vote for themselves)
+            const currentPlayerName = getPlayerName();
+            const activePlayers = players.filter(player => 
+                !player.isSpectator && player.name !== currentPlayerName
+            );
+            
+            activePlayers.forEach(player => {
+                const button = document.createElement('button');
+                button.className = 'vote-player-btn';
+                button.textContent = player.name;
+                button.onclick = () => vote('imposter', player.id);
+                voteDiv.appendChild(button);
+            });
+        }
+        
+        function updateVotingPlayersInline(players) {
+            console.log('updateVotingPlayersInline called, hasVoted:', hasVoted, 'isSpectator:', isSpectator);
+            const voteDiv = document.getElementById('vote-players-inline');
+            voteDiv.innerHTML = '';
+            
+            // If current user is a spectator, don't show any voting buttons
+            if (isSpectator) {
+                voteDiv.innerHTML = '<p style="color: #666; text-align: center;">Zuschauer können nicht abstimmen</p>';
+                return;
+            }
+            
+            // Don't create buttons if user has already voted
+            if (hasVoted) {
+                voteDiv.innerHTML = '<p style="color: #90EE90; text-align: center; font-weight: bold;">✅ Du hast bereits abgestimmt!</p>';
+                return;
+            }
+            
+            // Filter out spectators (eliminated players) and the current player (can't vote for themselves)
+            const currentPlayerName = getPlayerName();
+            const activePlayers = players.filter(player => 
+                !player.isSpectator && player.name !== currentPlayerName
+            );
+            
+            console.log('Creating voting buttons for', activePlayers.length, 'active players (filtered from', players.length, 'total players, excluding self)');
+            activePlayers.forEach(player => {
                 const button = document.createElement('button');
                 button.className = 'vote-player-btn';
                 button.textContent = player.name;
@@ -2425,6 +4125,8 @@
                 // Check if user was in a match and restore it
                 if (data.currentMatch) {
                     console.log('Restoring previous match:', data.currentMatch.id);
+                    console.log('Full currentMatch object:', data.currentMatch);
+                    console.log('currentMatch.allRounds:', data.currentMatch.allRounds);
                     currentMatchId = data.currentMatch.id;
                     updateURL(data.currentMatch.id); // Update URL when restoring match
                     hideAllScreens();
@@ -2450,22 +4152,39 @@
                         // Restore to active game
                         document.getElementById('user-profile').classList.remove('hidden');
                         
-                        // Show voting screen if in voting state
+                        // Load all rounds data if available
+                        console.log('Rejoin - checking allRounds:', data.currentMatch.allRounds);
+                        console.log('Rejoin - wordsThisRound:', data.currentMatch.wordsThisRound);
+                        console.log('Rejoin - currentRound:', data.currentMatch.currentRound);
+                        
+                        if (data.currentMatch.allRounds && data.currentMatch.allRounds.length > 0) {
+                            allRounds = data.currentMatch.allRounds;
+                            console.log('Rejoin - allRounds loaded:', allRounds);
+                            // Force display all rounds with a small delay to ensure DOM is ready
+                            setTimeout(() => {
+                                console.log('Delayed displayAllRounds call');
+                                displayAllRounds();
+                            }, 100);
+                        } else {
+                            console.log('Rejoin - No allRounds data available');
+                        }
+                        
+                        // Show voting section if in voting state
                         if (data.currentMatch.gameState === 'voting_continue' || data.currentMatch.gameState === 'voting_imposter') {
                             hasVoted = false; // Reset voting flag when rejoining
                             enableVotingButtons(); // Enable buttons when rejoining
                             
-                            // Hide game screen and show only voting screen
-                            document.getElementById('game-screen').classList.add('hidden');
-                            hideGamePlayersList();
-                            document.getElementById('voting-screen').classList.remove('hidden');
+                            document.getElementById('game-screen').classList.remove('hidden');
+                            document.getElementById('game-info').classList.add('hidden');
+                            document.getElementById('voting-section').classList.remove('hidden');
+                            
                             if (data.currentMatch.gameState === 'voting_continue') {
-                                document.getElementById('continue-voting').classList.remove('hidden');
-                                document.getElementById('imposter-voting').classList.add('hidden');
+                                document.getElementById('continue-voting-inline').classList.remove('hidden');
+                                document.getElementById('imposter-voting-inline').classList.add('hidden');
                             } else {
-                                document.getElementById('continue-voting').classList.add('hidden');
-                                document.getElementById('imposter-voting').classList.remove('hidden');
-                                updateVotingPlayers(data.currentMatch.players);
+                                document.getElementById('continue-voting-inline').classList.add('hidden');
+                                document.getElementById('imposter-voting-inline').classList.remove('hidden');
+                                updateVotingPlayersInline(data.currentMatch.players);
                             }
                             
                             // Update voting status when rejoining
@@ -2473,7 +4192,8 @@
                         } else {
                             // Show game screen for normal gameplay
                             document.getElementById('game-screen').classList.remove('hidden');
-                            showGamePlayersList(); // Show players list when restoring match
+                            document.getElementById('game-info').classList.remove('hidden');
+                            document.getElementById('voting-section').classList.add('hidden');
                             updateMatchDisplay(data.currentMatch);
                         }
                     }
@@ -2502,6 +4222,29 @@
         socket.on('player_reconnected', (data) => {
             console.log(`${data.username} ist wieder da!`);
             // Optionally show a notification
+        });
+        
+        // Update stats when they change
+        socket.on('stats_updated', (data) => {
+            console.log('Stats updated:', data.user.stats);
+            // Update the stored user data
+            if (data.user && data.user.stats) {
+                // Update global currentUser if it exists
+                if (currentUser && currentUser.username === data.user.username) {
+                    currentUser.stats = data.user.stats;
+                    // Update localStorage as well
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+                
+                // Find and update user stats display if stats screen is visible
+                if (!document.getElementById('stats-screen').classList.contains('hidden')) {
+                    // Refresh the stats display
+                    showStats();
+                }
+                
+                // Show a brief notification that stats were updated
+                showSuccess('Statistiken aktualisiert!');
+            }
         });
         
         // Socket Events for Lobby
