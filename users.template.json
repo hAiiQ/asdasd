@@ -1,7 +1,136 @@
 {
-  "_meta": {
-    "version": "1.0",
-    "created": "2025-08-26",
-    "description": "Template for user accounts - will be created automatically if users.json doesn't exist"
+  "haiq": {
+    "username": "hAiQ",
+    "password": "made1n",
+    "vip": true,
+    "stats": {
+      "gamesPlayed": 20,
+      "wins": 9,
+      "losses": 11,
+      "imposterWins": 4,
+      "wordsGuessedAsImposter": 4,
+      "totalVotesReceived": 14,
+      "correctVotes": 0,
+      "createdAt": "2025-08-12T22:00:09.223Z"
+    },
+    "avatar": {
+      "type": "männlich",
+      "id": 15,
+      "frame": "rainbow"
+    }
+  },
+  "test": {
+    "username": "test",
+    "password": "made1n",
+    "stats": {
+      "gamesPlayed": 20,
+      "wins": 12,
+      "losses": 8,
+      "imposterWins": 4,
+      "wordsGuessedAsImposter": 4,
+      "totalVotesReceived": 9,
+      "correctVotes": 0,
+      "createdAt": "2025-08-12T22:00:20.877Z"
+    },
+    "avatar": {
+      "type": "männlich",
+      "id": 1,
+      "frame": 1
+    },
+    "vip": false
+  },
+  "test2": {
+    "username": "test2",
+    "password": "made1n",
+    "stats": {
+      "gamesPlayed": 16,
+      "wins": 6,
+      "losses": 10,
+      "imposterWins": 1,
+      "wordsGuessedAsImposter": 1,
+      "totalVotesReceived": 10,
+      "correctVotes": 0,
+      "createdAt": "2025-08-12T23:25:54.687Z"
+    },
+    "avatar": {
+      "type": "standard",
+      "id": 0,
+      "frame": 0
+    },
+    "vip": false
+  },
+  "test1": {
+    "username": "test1",
+    "password": "made1n",
+    "stats": {
+      "gamesPlayed": 20,
+      "wins": 9,
+      "losses": 11,
+      "imposterWins": 2,
+      "wordsGuessedAsImposter": 4,
+      "totalVotesReceived": 16,
+      "correctVotes": 0,
+      "createdAt": "2025-08-12T23:26:41.764Z"
+    },
+    "avatar": {
+      "type": "männlich",
+      "id": 2,
+      "frame": 7
+    },
+    "vip": false
+  },
+  "test3": {
+    "username": "test3",
+    "password": "made1n",
+    "stats": {
+      "gamesPlayed": 0,
+      "wins": 0,
+      "losses": 0,
+      "imposterWins": 0,
+      "wordsGuessedAsImposter": 0,
+      "totalVotesReceived": 0,
+      "correctVotes": 0,
+      "createdAt": "2025-08-12T23:37:53.118Z"
+    },
+    "avatar": {
+      "type": "standard",
+      "id": 0,
+      "frame": 0
+    },
+    "vip": false
+  },
+  "test4": {
+    "username": "test4",
+    "password": "made1n",
+    "stats": {
+      "gamesPlayed": 4,
+      "wins": 2,
+      "losses": 2,
+      "imposterWins": 0,
+      "wordsGuessedAsImposter": 1,
+      "totalVotesReceived": 6,
+      "correctVotes": 0,
+      "createdAt": "2025-08-12T23:39:22.598Z"
+    },
+    "avatar": {
+      "type": "männlich",
+      "id": 10,
+      "frame": 4
+    },
+    "vip": false
+  },
+  "asdasd": {
+    "username": "asdasd",
+    "password": "made1n",
+    "stats": {
+      "gamesPlayed": 0,
+      "wins": 0,
+      "losses": 0,
+      "imposterWins": 0,
+      "wordsGuessedAsImposter": 0,
+      "totalVotesReceived": 0,
+      "correctVotes": 0,
+      "createdAt": "2025-08-14T01:48:00.545Z"
+    }
   }
 }
