@@ -3809,10 +3809,17 @@
         });
         
         socket.on('vote_updated', (data) => {
+            console.log('=== vote_updated received ===');
+            console.log('data.gameState:', data.gameState);
+            console.log('data.afterOverlay:', data.afterOverlay);
+            console.log('hasVoted before processing:', hasVoted);
+            console.log('isSpectator:', isSpectator);
+            
             // If this comes after an overlay, delay processing until overlay is done
             if (data.afterOverlay) {
                 console.log('vote_updated with afterOverlay flag - delaying processing');
                 setTimeout(() => {
+                    console.log('=== Processing delayed vote_updated ===');
                     processVoteUpdate(data);
                 }, 5500); // Wait for overlay to finish
                 return;
@@ -3845,14 +3852,23 @@
                 if (currentVotingType !== data.gameState) {
                     console.log('New imposter voting detected, resetting hasVoted');
                     currentVotingType = data.gameState;
+                    hasVoted = false; // Reset for new voting phase
+                }
+                
+                // Always reset hasVoted for imposter voting to ensure interface shows
+                if (data.afterOverlay) {
+                    console.log('Imposter voting after overlay - ensuring hasVoted is false');
                     hasVoted = false;
                 }
+                
+                console.log('Processing imposter voting - hasVoted:', hasVoted, 'isSpectator:', isSpectator);
                 
                 if (!hasVoted) {
                     enableVotingButtons(); // Enable buttons for new voting round
                     
                     // Hide game info and show voting section (only for active players)
                     if (!isSpectator) {
+                        console.log('Showing voting section for imposter voting');
                         document.getElementById('game-info').classList.add('hidden');
                         document.getElementById('voting-section').classList.remove('hidden');
                     }
@@ -3863,8 +3879,11 @@
                 
                 document.getElementById('continue-voting-inline').classList.add('hidden');
                 if (!isSpectator) {
+                    console.log('Showing imposter voting inline interface');
                     document.getElementById('imposter-voting-inline').classList.remove('hidden');
                     updateVotingPlayersInline(data.players);
+                } else {
+                    console.log('User is spectator - hiding imposter voting interface');
                 }
                 
                 // Update voting status
@@ -4090,7 +4109,13 @@
         });
         
         function proceedAfterVotingResult(data) {
+            console.log('=== proceedAfterVotingResult called ===');
+            console.log('data:', data);
+            console.log('hasVoted before processing:', hasVoted);
+            console.log('currentVotingType before processing:', currentVotingType);
+            
             if (data.hideVotingInterface) {
+                console.log('Hiding voting interfaces...');
                 // Hide all voting interfaces
                 document.getElementById('voting-screen').classList.add('hidden');
                 document.getElementById('continue-voting').classList.add('hidden');
@@ -4103,6 +4128,9 @@
                 hasVoted = false;
                 currentVotingType = null; // Reset voting type
                 enableVotingButtons();
+                
+                console.log('hasVoted after reset:', hasVoted);
+                console.log('currentVotingType after reset:', currentVotingType);
                 
                 // Only show game interface if we're not switching to a new voting phase
                 // Check if this is switching to imposter voting or continuing game
@@ -4119,6 +4147,7 @@
                     showSuccess(data.message);
                 }
             }
+            console.log('=== proceedAfterVotingResult completed ===');
         }
         
         // Helper Functions
