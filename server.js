@@ -2266,6 +2266,9 @@ function prepareGame(matchId) {
 
     // Assign words to players
     match.players.forEach((player, index) => {
+        // IMPORTANT: Reset spectator status for new game
+        player.isSpectator = false;
+        
         if (index === imposterIndex) {
             player.word = `Imposter (Tipp: ${match.imposterHintA})`;
             player.isImposter = true;
@@ -2279,6 +2282,7 @@ function prepareGame(matchId) {
         if (originalData) {
             originalData.word = player.word;
             originalData.isImposter = player.isImposter;
+            originalData.isSpectator = false; // Also reset in original data
         }
     });
     
