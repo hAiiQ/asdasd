@@ -4095,18 +4095,21 @@
         
         function proceedAfterVotingResult(data) {
             console.log('=== proceedAfterVotingResult called ===');
-            console.log('data:', data);
-            console.log('hasVoted before processing:', hasVoted);
-            console.log('currentVotingType before processing:', currentVotingType);
+            console.log('📊 data:', data);
+            console.log('🗳️ hasVoted before processing:', hasVoted);
+            console.log('🎯 currentVotingType before processing:', currentVotingType);
+            console.log('🎮 data.resultType:', data.resultType);
+            console.log('👁️ data.hideVotingInterface:', data.hideVotingInterface);
             
             if (data.hideVotingInterface) {
                 console.log('Hiding voting interfaces...');
                 
-                // For imposter voting, don't hide the interface immediately - keep it visible during overlay
+                // CACHE-BUSTER v1.2: For imposter voting, don't hide the interface immediately - keep it visible during overlay
                 if (data.resultType === 'imposter_voting') {
-                    console.log('Imposter voting - keeping voting interface visible during overlay');
+                    console.log('🔍 IMPOSTER VOTING - keeping voting interface visible during overlay');
                     // Don't hide voting interfaces yet, they will be handled after the overlay
                 } else {
+                    console.log('📤 OTHER VOTING TYPE - hiding voting interfaces immediately');
                     // Hide all voting interfaces for other result types
                     document.getElementById('voting-screen').classList.add('hidden');
                     document.getElementById('continue-voting').classList.add('hidden');
