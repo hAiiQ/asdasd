@@ -3846,6 +3846,9 @@
                 
                 console.log('Processing imposter voting - hasVoted:', hasVoted, 'isSpectator:', isSpectator);
                 
+                // Hide the old continue voting interface when switching to imposter voting
+                document.getElementById('continue-voting-inline').classList.add('hidden');
+                
                 if (!hasVoted) {
                     enableVotingButtons(); // Enable buttons for new voting round
                     
@@ -3860,7 +3863,6 @@
                 // Always hide word input during voting
                 document.getElementById('word-input-section').classList.add('hidden');
                 
-                document.getElementById('continue-voting-inline').classList.add('hidden');
                 if (!isSpectator) {
                     console.log('Showing imposter voting inline interface');
                     document.getElementById('imposter-voting-inline').classList.remove('hidden');
@@ -4099,13 +4101,20 @@
             
             if (data.hideVotingInterface) {
                 console.log('Hiding voting interfaces...');
-                // Hide all voting interfaces
-                document.getElementById('voting-screen').classList.add('hidden');
-                document.getElementById('continue-voting').classList.add('hidden');
-                document.getElementById('imposter-voting').classList.add('hidden');
-                document.getElementById('continue-voting-inline').classList.add('hidden');
-                document.getElementById('imposter-voting-inline').classList.add('hidden');
-                document.getElementById('voting-section').classList.add('hidden');
+                
+                // For imposter voting, don't hide the interface immediately - keep it visible during overlay
+                if (data.resultType === 'imposter_voting') {
+                    console.log('Imposter voting - keeping voting interface visible during overlay');
+                    // Don't hide voting interfaces yet, they will be handled after the overlay
+                } else {
+                    // Hide all voting interfaces for other result types
+                    document.getElementById('voting-screen').classList.add('hidden');
+                    document.getElementById('continue-voting').classList.add('hidden');
+                    document.getElementById('imposter-voting').classList.add('hidden');
+                    document.getElementById('continue-voting-inline').classList.add('hidden');
+                    document.getElementById('imposter-voting-inline').classList.add('hidden');
+                    document.getElementById('voting-section').classList.add('hidden');
+                }
                 
                 // Reset voting state and enable buttons (including showing player vote buttons again)
                 hasVoted = false;
