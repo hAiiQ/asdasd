@@ -2973,7 +2973,7 @@
             
             // Prevent self-voting when voting for imposter
             if (voteType === 'imposter' && targetPlayerId) {
-                const currentPlayerName = getPlayerName();
+                const currentPlayerName = myPlayerName || (currentUser ? currentUser.username : null) || getPlayerName();
                 const targetPlayer = currentPlayers.find(p => p.id === targetPlayerId);
                 if (targetPlayer && targetPlayer.name === currentPlayerName) {
                     showError('Du kannst nicht für dich selbst stimmen!');
@@ -3259,7 +3259,7 @@
             isCreatingMatch = false; // Reset the creation flag
             currentMatchId = data.matchId;
             isHost = true;
-            currentPlayers = [{ name: myPlayerName || getPlayerName(), isHost: true }]; // Add ourselves to the players list
+            currentPlayers = [{ name: myPlayerName || (currentUser ? currentUser.username : null) || getPlayerName(), isHost: true }]; // Add ourselves to the players list
             updateURL(data.matchId); // Update URL when match is created
             document.getElementById('current-match-id').textContent = data.matchId;
             hideAllScreens();
@@ -3296,7 +3296,7 @@
             updatePlayersList(data.players);
             
             // Check if current user became the host
-            const playerName = myPlayerName || getPlayerName();
+            const playerName = myPlayerName || (currentUser ? currentUser.username : null) || getPlayerName();
             if (playerName) {
                 const currentPlayer = data.players.find(p => p.name === playerName);
                 if (currentPlayer) {
@@ -3418,9 +3418,14 @@
             }
             
             // Show input if it's player's turn (but not for spectators)
-            if (data.currentPlayer === getPlayerName() && !isSpectator) {
+            const playerName = myPlayerName || (currentUser ? currentUser.username : null) || getPlayerName();
+            console.log('Checking if should show word input - currentPlayer:', data.currentPlayer, 'playerName:', playerName, 'isSpectator:', isSpectator);
+            
+            if (data.currentPlayer === playerName && !isSpectator) {
+                console.log('Showing word input for current player');
                 document.getElementById('word-input-section').classList.remove('hidden');
             } else {
+                console.log('Hiding word input - not current player or spectator');
                 document.getElementById('word-input-section').classList.add('hidden');
             }
             
@@ -3537,9 +3542,14 @@
                 document.getElementById('current-player').textContent = data.currentPlayer;
                 document.getElementById('current-round').textContent = data.round;
                 
-                if (data.currentPlayer === getPlayerName() && !isSpectator) {
+                const playerName = myPlayerName || (currentUser ? currentUser.username : null) || getPlayerName();
+                console.log('word_submitted - Checking if should show word input - currentPlayer:', data.currentPlayer, 'playerName:', playerName, 'isSpectator:', isSpectator);
+                
+                if (data.currentPlayer === playerName && !isSpectator) {
+                    console.log('word_submitted - Showing word input for current player');
                     document.getElementById('word-input-section').classList.remove('hidden');
                 } else {
+                    console.log('word_submitted - Hiding word input - not current player or spectator');
                     document.getElementById('word-input-section').classList.add('hidden');
                 }
             }
@@ -3642,9 +3652,14 @@
                 document.getElementById('current-player').textContent = data.currentPlayer;
                 document.getElementById('current-round').textContent = data.round;
                 
-                if (data.currentPlayer === getPlayerName() && !isSpectator) {
+                const playerName = myPlayerName || (currentUser ? currentUser.username : null) || getPlayerName();
+                console.log('game_updated playing - Checking if should show word input - currentPlayer:', data.currentPlayer, 'playerName:', playerName, 'isSpectator:', isSpectator);
+                
+                if (data.currentPlayer === playerName && !isSpectator) {
+                    console.log('game_updated playing - Showing word input for current player');
                     document.getElementById('word-input-section').classList.remove('hidden');
                 } else {
+                    console.log('game_updated playing - Hiding word input - not current player or spectator');
                     document.getElementById('word-input-section').classList.add('hidden');
                 }
             }
