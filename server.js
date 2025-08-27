@@ -2228,12 +2228,14 @@ function resetMatchToLobby(matchId) {
     match.players.forEach(player => {
         player.word = null;
         player.isImposter = false;
+        player.isSpectator = false; // IMPORTANT: Reset spectator status for new games
         
         // Reset original player data
         const originalData = match.originalPlayerData.get(player.name);
         if (originalData) {
             originalData.word = null;
             originalData.isImposter = false;
+            originalData.isSpectator = false; // Also reset in original data
         }
     });
     
@@ -2887,6 +2889,7 @@ io.on('connection', (socket) => {
                     io.to(player.id).emit('game_started', {
                         word: player.word,
                         isImposter: player.isImposter,
+                        spectatorMode: player.isSpectator, // Include spectator status for client
                         currentPlayer: finalMatch.players[finalMatch.currentPlayerIndex].name,
                         round: finalMatch.currentRound,
                         players: finalMatch.players
