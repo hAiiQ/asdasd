@@ -3327,30 +3327,24 @@
             updateStartGameButton();
         });
         
-        socket.on('countdown_started', (data) => {
-            console.log('Countdown started for all players with data:', data);
-            showCountdown(data.word, data.isImposter);
-        });
-        
-        socket.on('game_started', (data) => {
-            console.log('game_started event received:', data);
-            playerWord = data.word;
-            isImposter = data.isImposter;
+        // Helper function to reset all game-specific data for a fresh start
+        function resetGameData() {
+            console.log('RESET: Resetting all game data for fresh start');
             
-            // IMPORTANT: Set spectator status from server data - DO NOT reset to false automatically
-            if (data.spectatorMode !== undefined) {
-                isSpectator = data.spectatorMode;
-                console.log('Setting isSpectator from server:', isSpectator);
-            }
-            
-            currentPlayerName = data.currentPlayer;
-            
-            // Reset game state when new game starts
+            // Reset all voting and game state
             hasVoted = false;
             currentVotingType = null;
+            isSpectator = false; // Always reset spectator status for new games
+            
+            // Reset player data
+            playerWord = null;
+            isImposter = false;
+            currentPlayerName = null;
+            
+            // Reset rounds data
             allRounds = [];
             
-            // Hide all voting interfaces and reset UI for new game
+            // Hide all voting interfaces
             document.getElementById('voting-section').classList.add('hidden');
             document.getElementById('continue-voting').classList.add('hidden');
             document.getElementById('imposter-voting').classList.add('hidden');
@@ -3358,17 +3352,49 @@
             document.getElementById('imposter-voting-inline').classList.add('hidden');
             document.getElementById('voting-screen').classList.add('hidden');
             
-            // Clear words list for new game
+            // Hide word input initially
+            document.getElementById('word-input-section').classList.add('hidden');
+            
+            // Clear words list
             const wordsList = document.getElementById('words-list');
             if (wordsList) {
                 wordsList.innerHTML = '';
             }
             
-            // Show game info section (normal gameplay view)
-            document.getElementById('game-info').classList.remove('hidden');
-            
             // Enable voting buttons for new game
             enableVotingButtons();
+            
+            console.log('RESET: Game data reset complete - hasVoted:', hasVoted, 'isSpectator:', isSpectator, 'hasVoted:', hasVoted);
+        }
+
+        socket.on('countdown_started', (data) => {
+            console.log('Countdown started for all players with data:', data);
+            
+            // IMPORTANT: Reset ALL game data when countdown starts for a truly fresh game
+            resetGameData();
+            
+            showCountdown(data.word, data.isImposter);
+        });
+
+        socket.on('game_started', (data) => {
+            console.log('game_started event received:', data);
+            
+            // IMPORTANT: Always reset game data first, then apply server data
+            resetGameData();
+            
+            playerWord = data.word;
+            isImposter = data.isImposter;
+            
+            // IMPORTANT: Set spectator status from server data (overwrites reset)
+            if (data.spectatorMode !== undefined) {
+                isSpectator = data.spectatorMode;
+                console.log('OVERRIDE: Setting isSpectator from server:', isSpectator);
+            }
+            
+            currentPlayerName = data.currentPlayer;
+            
+            // Show game info section (normal gameplay view)
+            document.getElementById('game-info').classList.remove('hidden');
             
             // Update word display based on spectator status
             if (isSpectator) {
@@ -3672,6 +3698,9 @@
         socket.on('return_to_lobby', (data) => {
             console.log('Returning to lobby:', data);
             
+            // IMPORTANT: Reset ALL game data when returning to lobby
+            resetGameData();
+            
             // Update current players list
             currentPlayers = data.players || [];
             
@@ -3681,7 +3710,7 @@
                 isHost = currentPlayer.isHost;
             }
             
-            // Reset game state
+            // Reset additional lobby-specific data
             playerWord = null;
             isImposter = false;
             currentPlayerName = null;
