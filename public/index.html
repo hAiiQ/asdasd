@@ -3062,8 +3062,17 @@
             const countdownBar = document.getElementById('voting-countdown-bar');
             const window = document.querySelector('.voting-result-window');
             
-            // Hide all other screens
-            hideAllScreens();
+            // CACHE-BUSTER v1.3: Don't hide all screens for imposter voting - keep voting interface visible
+            if (data.type === 'imposter_voting') {
+                console.log('🔍 IMPOSTER VOTING OVERLAY - NOT hiding all screens to keep voting interface visible');
+                // Don't hide all screens for imposter voting, just hide specific overlays
+                document.getElementById('game-finished-overlay').classList.remove('show');
+                hideVotingResultOverlay(); // Hide any existing voting result overlay
+            } else {
+                console.log('📤 OTHER OVERLAY TYPE - hiding all screens normally');
+                // Hide all other screens for non-imposter voting overlays
+                hideAllScreens();
+            }
             
             // Reset window classes
             window.className = 'voting-result-window';
