@@ -7,6 +7,10 @@ yarn-error.log*
 # User data - don't overwrite accounts on deployment
 users.json
 users.backup.json
+users.backup.*.json
+users.prod.backup.json
+users.dev.backup.json
+users.*.backup.json
 
 # Runtime data
 pids

@@ -18,79 +18,168 @@ const usersFile = 'users.json';
 const usersTemplateFile = 'users.template.json';
 let users = {};
 
-// Save users to file
+// Save users to file with enhanced backup system
 function saveUsers() {
     try {
+        // Always save to main file
         fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
         
-        // Create a backup every time we save (for cloud deployments)
+        // Create multiple backup files for better protection
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const backupFile = 'users.backup.json';
+        const timestampedBackup = `users.backup.${timestamp}.json`;
+        const dailyBackup = `users.backup.${new Date().toISOString().split('T')[0]}.json`;
+        
+        // Primary backup (always overwrite)
         fs.writeFileSync(backupFile, JSON.stringify(users, null, 2));
         
-        console.log('Users saved to', usersFile, 'and backed up to', backupFile);
+        // Timestamped backup (for version history)
+        fs.writeFileSync(timestampedBackup, JSON.stringify(users, null, 2));
+        
+        // Daily backup (one per day)
+        if (!fs.existsSync(dailyBackup)) {
+            fs.writeFileSync(dailyBackup, JSON.stringify(users, null, 2));
+        }
+        
+        // Environment-specific backup (for cloud deployments)
+        const envBackup = process.env.NODE_ENV === 'production' ? 'users.prod.backup.json' : 'users.dev.backup.json';
+        fs.writeFileSync(envBackup, JSON.stringify(users, null, 2));
+        
+        console.log(`✅ Users saved to ${usersFile} and ${Object.keys(users).length} accounts backed up to multiple locations`);
+        
+        // Clean up old timestamped backups (keep only last 10)
+        cleanupOldBackups();
     } catch (error) {
-        console.error('Failed to save users to file:', error);
+        console.error('❌ Failed to save users to file:', error);
         throw error; // Re-throw so calling code can handle it
     }
 }
 
-// Load users from file
-try {
-    if (fs.existsSync(usersFile)) {
-        const fileContent = fs.readFileSync(usersFile, 'utf8');
-        users = JSON.parse(fileContent);
-        console.log('✅ Loaded existing users.json with', Object.keys(users).length, 'accounts');
-    } else if (fs.existsSync('users.backup.json')) {
-        // Try to load from backup if main file is missing
-        const backupContent = fs.readFileSync('users.backup.json', 'utf8');
-        users = JSON.parse(backupContent);
-        console.log('🔄 Restored from users.backup.json with', Object.keys(users).length, 'accounts');
-        // Recreate main file
-        saveUsers();
-    } else if (fs.existsSync(usersTemplateFile)) {
-        const templateContent = fs.readFileSync(usersTemplateFile, 'utf8');
-        const templateData = JSON.parse(templateContent);
+// Clean up old backup files to prevent disk space issues
+function cleanupOldBackups() {
+    try {
+        const files = fs.readdirSync('.');
+        const backupFiles = files
+            .filter(file => file.startsWith('users.backup.') && file.endsWith('.json') && file.includes('T'))
+            .sort()
+            .reverse(); // Newest first
         
-        // Extract users object, handle different template structures
-        if (templateData.users) {
-            users = templateData.users; // If template has nested users object
-        } else {
-            // Filter out non-user objects (like _meta)
-            users = {};
-            Object.keys(templateData).forEach(key => {
-                if (!key.startsWith('_') && typeof templateData[key] === 'object' && templateData[key].username) {
-                    users[key] = templateData[key];
+        // Keep only the 10 most recent timestamped backups
+        if (backupFiles.length > 10) {
+            const filesToDelete = backupFiles.slice(10);
+            filesToDelete.forEach(file => {
+                try {
+                    fs.unlinkSync(file);
+                    console.log(`🗑️  Cleaned up old backup: ${file}`);
+                } catch (err) {
+                    console.warn(`⚠️  Could not delete old backup ${file}:`, err.message);
                 }
             });
         }
-        
-        console.log('📝 Loaded users.template.json (fresh deployment) with', Object.keys(users).length, 'accounts');
-        // Save as users.json for future use
-        saveUsers();
-    } else {
-        console.log('⚠️  No user files found, starting with empty user database');
-        users = {};
-    }
-} catch (error) {
-    console.error('❌ Error loading user data:', error);
-    console.log('🔄 Attempting to recover from backup...');
-    
-    // Try to recover from backup
-    try {
-        if (fs.existsSync('users.backup.json')) {
-            const backupContent = fs.readFileSync('users.backup.json', 'utf8');
-            users = JSON.parse(backupContent);
-            console.log('✅ Recovered from backup with', Object.keys(users).length, 'accounts');
-            saveUsers(); // Recreate main file
-        } else {
-            users = {};
-            console.log('⚠️  No backup available, starting fresh');
-        }
-    } catch (backupError) {
-        console.error('❌ Backup recovery failed:', backupError);
-        users = {};
+    } catch (error) {
+        console.warn('⚠️  Error during backup cleanup:', error.message);
     }
 }
+
+// Enhanced user loading with multiple fallback options
+function loadUsers() {
+    const loadingSources = [
+        usersFile,
+        'users.backup.json',
+        process.env.NODE_ENV === 'production' ? 'users.prod.backup.json' : 'users.dev.backup.json',
+        usersTemplateFile
+    ];
+    
+    // Also add any daily backups and recent timestamped backups
+    try {
+        const files = fs.readdirSync('.');
+        const dailyBackups = files
+            .filter(file => file.startsWith('users.backup.') && file.match(/\d{4}-\d{2}-\d{2}\.json$/))
+            .sort()
+            .reverse();
+        const recentBackups = files
+            .filter(file => file.startsWith('users.backup.') && file.includes('T'))
+            .sort()
+            .reverse()
+            .slice(0, 5); // Only check 5 most recent
+        
+        loadingSources.splice(3, 0, ...dailyBackups, ...recentBackups);
+    } catch (err) {
+        console.warn('⚠️  Could not scan for additional backups:', err.message);
+    }
+    
+    console.log('🔍 Checking for user data in following order:', loadingSources);
+    
+    for (const source of loadingSources) {
+        try {
+            if (fs.existsSync(source)) {
+                const fileContent = fs.readFileSync(source, 'utf8');
+                const loadedData = JSON.parse(fileContent);
+                
+                if (source === usersTemplateFile) {
+                    // Handle template file structure
+                    if (loadedData.users) {
+                        users = loadedData.users;
+                    } else {
+                        users = {};
+                        Object.keys(loadedData).forEach(key => {
+                            if (!key.startsWith('_') && typeof loadedData[key] === 'object' && loadedData[key].username) {
+                                users[key] = loadedData[key];
+                            }
+                        });
+                    }
+                    console.log(`📝 Loaded from template (${source}) with ${Object.keys(users).length} accounts`);
+                } else {
+                    users = loadedData;
+                    console.log(`✅ Loaded from ${source} with ${Object.keys(users).length} accounts`);
+                }
+                
+                // If we loaded from a backup or template, save to main file
+                if (source !== usersFile) {
+                    console.log(`🔄 Restoring ${source} to main users.json file`);
+                    saveUsers();
+                }
+                
+                return true; // Successfully loaded
+            }
+        } catch (error) {
+            console.warn(`⚠️  Could not load from ${source}:`, error.message);
+            continue; // Try next source
+        }
+    }
+    
+    // If we get here, no valid user data was found
+    console.log('⚠️  No valid user data found in any source, starting with empty database');
+    users = {};
+    return false;
+}
+
+// Load users from file with enhanced fallback system
+try {
+    loadUsers();
+} catch (error) {
+    console.error('❌ Critical error during user loading:', error);
+    users = {};
+}
+
+// Periodic backup system to protect against data loss
+function createPeriodicBackup() {
+    if (Object.keys(users).length > 0) {
+        console.log(`🔄 Creating periodic backup of ${Object.keys(users).length} accounts...`);
+        try {
+            saveUsers();
+        } catch (error) {
+            console.error('❌ Periodic backup failed:', error);
+        }
+    }
+}
+
+// Create backups every 30 minutes and on server start
+if (Object.keys(users).length > 0) {
+    console.log(`🛡️  Setting up periodic backups for ${Object.keys(users).length} existing accounts`);
+    createPeriodicBackup(); // Immediate backup on startup
+}
+setInterval(createPeriodicBackup, 30 * 60 * 1000); // Every 30 minutes
 
 // Validate username
 function isValidUsername(username) {
