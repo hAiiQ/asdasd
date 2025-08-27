@@ -4,6 +4,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# User data - don't overwrite accounts on deployment
+users.json
+
 # Runtime data
 pids
 *.pid

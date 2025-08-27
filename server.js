@@ -15,16 +15,8 @@ app.use(express.json());
 
 // User system
 const usersFile = 'users.json';
+const usersTemplateFile = 'users.template.json';
 let users = {};
-
-// Load users from file
-try {
-    if (fs.existsSync(usersFile)) {
-        users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
-    }
-} catch (error) {
-    users = {};
-}
 
 // Save users to file
 function saveUsers() {
@@ -34,6 +26,22 @@ function saveUsers() {
         console.error('Failed to save users to file:', error);
         throw error; // Re-throw so calling code can handle it
     }
+}
+
+// Load users from file
+try {
+    if (fs.existsSync(usersFile)) {
+        users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+        console.log('Loaded existing users.json');
+    } else if (fs.existsSync(usersTemplateFile)) {
+        users = JSON.parse(fs.readFileSync(usersTemplateFile, 'utf8'));
+        console.log('Loaded users.template.json (fresh deployment)');
+        // Save as users.json for future use
+        saveUsers();
+    }
+} catch (error) {
+    console.error('Error loading user data:', error);
+    users = {};
 }
 
 // Validate username
