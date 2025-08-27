@@ -2038,6 +2038,13 @@
                     currentUserAvatar = { type: 'standard', id: 0, frame: 0 };
                 }
                 
+                // Check for saved spectator status
+                const savedSpectator = localStorage.getItem('imposterSpectator');
+                if (savedSpectator === 'true') {
+                    isSpectator = true;
+                    console.log('🎭 RESTORE: Spectator status restored from localStorage');
+                }
+                
                 // Automatically login with socket to refresh user data
                 socket.emit('user_login', { 
                     username: currentUser.username, 
@@ -3405,6 +3412,10 @@
             window.createdThisMatch = false;
             isCreatingMatch = false;
             
+            // Clear saved spectator status
+            localStorage.removeItem('imposterSpectator');
+            console.log('🎭 CLEAR: Spectator status cleared from localStorage');
+            
             // Clear URL and go to main menu immediately
             updateURL();
             hideAllScreens();
@@ -3562,7 +3573,15 @@
             // Reset all voting and game state
             hasVoted = false;
             currentVotingType = null;
-            isSpectator = false; // Always reset spectator status for new games
+            
+            // Only reset spectator status if not currently a spectator (to preserve eliminated player status)
+            const wasSpectator = isSpectator;
+            if (!wasSpectator) {
+                isSpectator = false; // Only reset for non-spectators (new games)
+                localStorage.removeItem('imposterSpectator'); // Clear saved status for new games
+            } else {
+                console.log('🎭 PRESERVE: Keeping spectator status during reset (eliminated player)');
+            }
             
             // Reset player data
             playerWord = null;
@@ -3617,6 +3636,13 @@
             if (data.spectatorMode !== undefined) {
                 isSpectator = data.spectatorMode;
                 console.log('OVERRIDE: Setting isSpectator from server:', isSpectator);
+                
+                // Persist spectator status in localStorage for page reloads
+                if (isSpectator) {
+                    localStorage.setItem('imposterSpectator', 'true');
+                } else {
+                    localStorage.removeItem('imposterSpectator');
+                }
             }
             
             currentPlayerName = data.currentPlayer;
@@ -3626,6 +3652,7 @@
             
             // Update word display based on spectator status
             if (isSpectator) {
+                console.log('🎭 SPECTATOR MODE: Setting up spectator UI');
                 document.getElementById('player-word').textContent = 'Zuschauer-Modus';
                 document.getElementById('player-word').className = 'spectator-word';
                 
@@ -3636,6 +3663,17 @@
                 document.getElementById('continue-voting-inline').classList.add('hidden');
                 document.getElementById('imposter-voting-inline').classList.add('hidden');
                 document.getElementById('word-input-section').classList.add('hidden');
+                
+                // Ensure game info is visible for spectators
+                document.getElementById('game-info').classList.remove('hidden');
+                
+                // Show spectator-specific content in words list
+                const wordsList = document.getElementById('words-list');
+                if (wordsList) {
+                    wordsList.innerHTML = '<div class="spectator-info" style="text-align: center; padding: 20px; color: #999; font-style: italic;">Du bist Zuschauer und kannst das Spiel verfolgen.</div>';
+                }
+                
+                console.log('🎭 SPECTATOR MODE: UI setup complete');
             } else {
                 document.getElementById('player-word').textContent = data.word;
                 document.getElementById('player-word').className = data.isImposter ? 'imposter-word' : '';

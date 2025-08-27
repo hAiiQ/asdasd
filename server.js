@@ -2922,11 +2922,15 @@ io.on('connection', (socket) => {
             const playerData = match.players.find(p => p.id === socket.id);
             if (playerData) {
                 socket.emit('game_started', {
-                    word: playerData.word,
-                    isImposter: playerData.isImposter,
+                    word: playerData.isSpectator ? 'Zuschauer-Modus' : playerData.word,
+                    isImposter: playerData.isSpectator ? false : playerData.isImposter,
                     currentPlayer: match.currentPlayerName || (match.players[match.currentPlayerIndex] ? match.players[match.currentPlayerIndex].name : null),
                     round: match.currentRound,
-                    players: match.players
+                    players: match.players.map(p => ({
+                        ...p,
+                        displayName: p.isSpectator ? `${p.name} (Zuschauer)` : p.name
+                    })),
+                    spectatorMode: playerData.isSpectator
                 });
                 
                 // Send additional game state data if needed
@@ -3044,11 +3048,15 @@ io.on('connection', (socket) => {
         // Send game state to all players
         match.players.forEach(player => {
             io.to(player.id).emit('game_started', {
-                word: player.word,
-                isImposter: player.isImposter,
+                word: player.isSpectator ? 'Zuschauer-Modus' : player.word,
+                isImposter: player.isSpectator ? false : player.isImposter,
+                spectatorMode: player.isSpectator,
                 currentPlayer: match.players[match.currentPlayerIndex].name,
                 round: match.currentRound,
-                players: match.players
+                players: match.players.map(p => ({
+                    ...p,
+                    displayName: p.isSpectator ? `${p.name} (Zuschauer)` : p.name
+                }))
             });
         });
         
