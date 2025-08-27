@@ -2478,6 +2478,12 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
             if (guessVotes > continueVotes) {
                 match.gameState = 'voting_imposter';
                 match.votes = [];
+                return { 
+                    success: true, 
+                    switchToImposterVoting: true,
+                    resultType: 'imposter_voting',
+                    message: 'Imposter-Suche startet!'
+                };
             } else {
                 // Continue to next round - use the same player order as first round
                 match.currentRound++;
@@ -2517,6 +2523,15 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
                         spectatorMode: player.isSpectator
                     });
                 });
+                
+                return { 
+                    success: true, 
+                    continueGame: true,
+                    resultType: 'continue',
+                    currentRound: match.currentRound,
+                    nextRound: match.currentRound,
+                    message: 'Spiel geht weiter!'
+                };
             }
         } else if (match.gameState === 'voting_imposter') {
             // Count votes for each player
@@ -2543,7 +2558,12 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
                 match.gameState = 'playing';
                 match.votes = [];
                 match.wordsThisRound = [];
-                return { success: true, message: 'Unentschieden - Spiel geht weiter' };
+                return { 
+                    success: true, 
+                    resultType: 'tied_vote',
+                    message: 'Unentschieden - Spiel geht weiter',
+                    continueGame: true
+                };
             }
             
             // Check if the voted out player is the imposter
@@ -2607,7 +2627,11 @@ function submitVote(matchId, socketId, voteType, targetPlayerId = null) {
                     votedOutPlayerName: votedOutPlayer.name,
                     activePlayers: activePlayers.length,
                     totalPlayers: match.players.length,
-                    continueGame: true 
+                    continueGame: true,
+                    resultType: 'player_eliminated',
+                    eliminatedPlayer: votedOutPlayer.name,
+                    currentRound: match.currentRound,
+                    message: `${votedOutPlayer.name} wurde eliminiert und ist jetzt Zuschauer`
                 };
             }
         }
@@ -3156,10 +3180,13 @@ io.on('connection', (socket) => {
             // Player was eliminated but becomes spectator and game continues
             const match = matches.get(matchId);
             
-            // Clear voting interface for all players
+            // Clear voting interface for all players with result data
             io.to(matchId).emit('voting_ended', {
-                message: 'Abstimmung beendet!',
-                hideVotingInterface: true
+                message: result.message || 'Abstimmung beendet!',
+                hideVotingInterface: true,
+                resultType: result.resultType,
+                eliminatedPlayer: result.eliminatedPlayer,
+                currentRound: result.currentRound
             });
             
             // Notify the eliminated player that they're now a spectator
@@ -3207,8 +3234,11 @@ io.on('connection', (socket) => {
             if (match.gameState === 'playing') {
                 // Voting phase ended, game continues - clear voting interface for all players
                 io.to(matchId).emit('voting_ended', {
-                    message: 'Abstimmung beendet - Spiel geht weiter!',
-                    hideVotingInterface: true
+                    message: result.message || 'Abstimmung beendet - Spiel geht weiter!',
+                    hideVotingInterface: true,
+                    resultType: result.resultType,
+                    currentRound: result.currentRound,
+                    nextRound: result.nextRound
                 });
                 
                 // Send game state to all players to ensure UI is updated
@@ -3225,6 +3255,33 @@ io.on('connection', (socket) => {
                         spectatorMode: player.isSpectator
                     });
                 });
+            } else if (result.switchToImposterVoting) {
+                // Switch from continue voting to imposter voting
+                const match = matches.get(matchId);
+                
+                // Show voting result overlay for switching to imposter voting
+                io.to(matchId).emit('voting_ended', {
+                    message: result.message || 'Imposter-Suche startet!',
+                    hideVotingInterface: true,
+                    resultType: result.resultType,
+                    currentRound: match.currentRound
+                });
+                
+                // After overlay, switch to imposter voting
+                setTimeout(() => {
+                    const updatedMatch = matches.get(matchId);
+                    if (updatedMatch && updatedMatch.gameState === 'voting_imposter') {
+                        io.to(matchId).emit('vote_updated', {
+                            gameState: updatedMatch.gameState,
+                            votes: updatedMatch.votes,
+                            players: updatedMatch.players,
+                            currentPlayer: null,
+                            round: updatedMatch.currentRound,
+                            words: updatedMatch.wordsThisRound,
+                            allRounds: updatedMatch.allRounds
+                        });
+                    }
+                }, 5500); // Wait for overlay to finish (5 seconds + buffer)
             } else {
                 // Still in voting phase, update vote status
                 io.to(matchId).emit('vote_updated', {

@@ -950,6 +950,91 @@
             margin-top: 20px;
         }
         
+        /* Voting Result Overlay */
+        .voting-result-window {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #96ceb4 100%);
+            border-radius: 25px;
+            padding: 40px 50px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .countdown-overlay.show .voting-result-window {
+            transform: scale(1);
+        }
+        
+        .voting-result-icon {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: resultIconPulse 2s ease-in-out infinite;
+        }
+        
+        .voting-result-title {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 25px;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .voting-result-content {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .voting-result-content h3 {
+            font-size: 1.6em;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .voting-result-content p {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 8px 0;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .voting-result-content strong {
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .voting-countdown {
+            margin-top: 15px;
+        }
+        
+        .voting-countdown p {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 10px 0;
+        }
+        
+        /* Different colors for different voting results */
+        .voting-result-window.continue-game {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #96ceb4 100%);
+        }
+        
+        .voting-result-window.player-eliminated {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 50%, #d35400 100%);
+        }
+        
+        .voting-result-window.tied-vote {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 50%, #663399 100%);
+        }
+        
         .countdown-bar-container {
             width: 100%;
             height: 8px;
@@ -1830,6 +1915,23 @@
                     </div>
                     <p>Automatische Rückkehr zur Lobby in <span id="return-timer">15</span> Sekunden</p>
                     <button onclick="returnToLobbyManually()" class="return-btn">Sofort zur Lobby</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voting Result Overlay -->
+        <div id="voting-result-overlay" class="countdown-overlay">
+            <div class="voting-result-window">
+                <div class="voting-result-icon" id="voting-result-icon">📊</div>
+                <div class="voting-result-title" id="voting-result-title">Abstimmungsergebnis</div>
+                <div class="voting-result-content" id="voting-result-content">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                <div class="voting-countdown">
+                    <div class="countdown-bar-container">
+                        <div class="countdown-bar" id="voting-countdown-bar"></div>
+                    </div>
+                    <p>Weiter in <span id="voting-timer">5</span> Sekunden</p>
                 </div>
             </div>
         </div>
@@ -2940,6 +3042,123 @@
             window.gameFinishedCountdown = countdownInterval;
         }
         
+        function showVotingResultOverlay(data) {
+            console.log('Showing voting result overlay with data:', data);
+            
+            // Play sound effect
+            try {
+                const audio = new Audio('/sounds/reveal.mp3');
+                audio.volume = 0.5;
+                audio.play().catch(e => console.log('Could not play voting sound:', e));
+            } catch (e) {
+                console.log('Voting sound playback error:', e);
+            }
+            
+            const overlay = document.getElementById('voting-result-overlay');
+            const icon = document.getElementById('voting-result-icon');
+            const title = document.getElementById('voting-result-title');
+            const content = document.getElementById('voting-result-content');
+            const timerElement = document.getElementById('voting-timer');
+            const countdownBar = document.getElementById('voting-countdown-bar');
+            const window = document.querySelector('.voting-result-window');
+            
+            // Hide all other screens
+            hideAllScreens();
+            
+            // Reset window classes
+            window.className = 'voting-result-window';
+            
+            // Set content based on voting result type
+            if (data.type === 'continue') {
+                // Game continues to next round
+                icon.textContent = '▶️';
+                title.textContent = 'Spiel geht weiter!';
+                window.classList.add('continue-game');
+                
+                content.innerHTML = `
+                    <h3>🎯 Weiter zur nächsten Runde!</h3>
+                    <p>Die Spieler haben sich entschieden <strong>weiterzuspielen</strong>.</p>
+                    <p>Das Spiel geht in Runde <strong>${data.nextRound || (data.currentRound + 1)}</strong>.</p>
+                `;
+                
+            } else if (data.type === 'player_eliminated') {
+                // Player was voted out but was innocent
+                icon.textContent = '👋';
+                title.textContent = 'Spieler eliminiert!';
+                window.classList.add('player-eliminated');
+                
+                const eliminatedPlayerName = data.eliminatedPlayer || 'Unbekannt';
+                content.innerHTML = `
+                    <h3>⚖️ Spieler wurde rausgewählt!</h3>
+                    <p><strong>${eliminatedPlayerName}</strong> wurde eliminiert.</p>
+                    <p>❌ Es war nicht der Imposter!</p>
+                    <p>${eliminatedPlayerName} ist jetzt <strong>Zuschauer</strong>.</p>
+                `;
+                
+            } else if (data.type === 'tied_vote') {
+                // Tied vote, game continues
+                icon.textContent = '⚖️';
+                title.textContent = 'Unentschieden!';
+                window.classList.add('tied-vote');
+                
+                content.innerHTML = `
+                    <h3>⚖️ Abstimmung unentschieden!</h3>
+                    <p>Es gab keinen klaren Gewinner bei der Abstimmung.</p>
+                    <p>Das Spiel <strong>geht weiter</strong>!</p>
+                `;
+                
+            } else if (data.type === 'imposter_voting') {
+                // Switching to imposter voting
+                icon.textContent = '🔍';
+                title.textContent = 'Imposter-Suche!';
+                window.classList.add('continue-game');
+                
+                content.innerHTML = `
+                    <h3>🕵️ Zeit den Imposter zu finden!</h3>
+                    <p>Die Spieler haben sich entschieden, den <strong>Imposter zu erraten</strong>.</p>
+                    <p>Wählt weise - ihr habt nur eine Chance!</p>
+                `;
+            }
+            
+            // Show overlay with animation
+            overlay.classList.add('show');
+            
+            // Start 5-second countdown
+            let timeLeft = 5;
+            timerElement.textContent = timeLeft;
+            countdownBar.style.width = '100%';
+            
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+                
+                // Update progress bar
+                const percentage = (timeLeft / 5) * 100;
+                countdownBar.style.width = percentage + '%';
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    hideVotingResultOverlay();
+                }
+            }, 1000);
+            
+            // Store interval ID to clear it if needed
+            window.votingResultCountdown = countdownInterval;
+        }
+        
+        function hideVotingResultOverlay() {
+            const overlay = document.getElementById('voting-result-overlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+            
+            // Clear countdown if it's running
+            if (window.votingResultCountdown) {
+                clearInterval(window.votingResultCountdown);
+                window.votingResultCountdown = null;
+            }
+        }
+        
         function submitWord() {
             const word = document.getElementById('word-input').value.trim();
             if (!word) {
@@ -3834,6 +4053,29 @@
         
         // Handle voting end
         socket.on('voting_ended', (data) => {
+            console.log('Voting ended with data:', data);
+            
+            // Show voting result overlay if we have result data
+            if (data.resultType) {
+                showVotingResultOverlay({
+                    type: data.resultType,
+                    eliminatedPlayer: data.eliminatedPlayer,
+                    currentRound: data.currentRound,
+                    nextRound: data.nextRound,
+                    message: data.message
+                });
+                
+                // After overlay is shown, proceed with normal voting end logic after 5 seconds
+                setTimeout(() => {
+                    proceedAfterVotingResult(data);
+                }, 5000);
+            } else {
+                // Fallback to immediate processing if no result data
+                proceedAfterVotingResult(data);
+            }
+        });
+        
+        function proceedAfterVotingResult(data) {
             if (data.hideVotingInterface) {
                 // Hide all voting interfaces
                 document.getElementById('voting-screen').classList.add('hidden');
@@ -3851,12 +4093,12 @@
                 // Show game interface again
                 document.getElementById('game-info').classList.remove('hidden');
                 
-                // Show the feedback message
-                if (data.message) {
+                // Show the feedback message only if no overlay was shown
+                if (data.message && !data.resultType) {
                     showSuccess(data.message);
                 }
             }
-        });
+        }
         
         // Helper Functions
         function copyMatchLink() {
