@@ -2045,6 +2045,20 @@
                     console.log('🎭 RESTORE: Spectator status restored from localStorage');
                 }
                 
+                // Check for saved match ID to restore current game state
+                const savedMatchId = localStorage.getItem('imposterMatchId');
+                if (savedMatchId) {
+                    currentMatchId = savedMatchId;
+                    console.log('🎮 RESTORE: Match ID restored from localStorage:', currentMatchId);
+                }
+                
+                // Check for saved host status
+                const savedHost = localStorage.getItem('imposterHost');
+                if (savedHost === 'true') {
+                    isHost = true;
+                    console.log('👑 RESTORE: Host status restored from localStorage');
+                }
+                
                 // Automatically login with socket to refresh user data
                 socket.emit('user_login', { 
                     username: currentUser.username, 
@@ -3414,7 +3428,10 @@
             
             // Clear saved spectator status
             localStorage.removeItem('imposterSpectator');
-            console.log('🎭 CLEAR: Spectator status cleared from localStorage');
+            // Clear saved match data
+            localStorage.removeItem('imposterMatchId');
+            localStorage.removeItem('imposterHost');
+            console.log('🎭 CLEAR: All match data cleared from localStorage');
             
             // Clear URL and go to main menu immediately
             updateURL();
@@ -3499,6 +3516,12 @@
             currentMatchId = data.matchId;
             isHost = true;
             currentPlayers = [{ name: myPlayerName || (currentUser ? currentUser.username : null) || getPlayerName(), isHost: true }]; // Add ourselves to the players list
+            
+            // Save match state to localStorage
+            localStorage.setItem('imposterMatchId', currentMatchId);
+            localStorage.setItem('imposterHost', 'true');
+            console.log('💾 SAVE: Match created - saved matchId and host status to localStorage');
+            
             updateURL(data.matchId); // Update URL when match is created
             document.getElementById('current-match-id').textContent = data.matchId;
             hideAllScreens();
@@ -3516,6 +3539,12 @@
         
         socket.on('match_joined', (data) => {
             currentMatchId = data.matchId;
+            
+            // Save match ID to localStorage (but not host status since we're joining)
+            localStorage.setItem('imposterMatchId', currentMatchId);
+            localStorage.removeItem('imposterHost'); // Clear host status since we're joining someone else's game
+            console.log('💾 SAVE: Match joined - saved matchId, cleared host status');
+            
             updateURL(data.matchId); // Update URL when match is joined
             document.getElementById('current-match-id').textContent = data.matchId;
             hideAllScreens();
@@ -3548,9 +3577,17 @@
                         isHost = currentPlayer.isHost;
                     }
                     
+                    // Save host status to localStorage
+                    if (isHost) {
+                        localStorage.setItem('imposterHost', 'true');
+                    } else {
+                        localStorage.removeItem('imposterHost');
+                    }
+                    
                     // Show notification if user became host
                     if (!wasHost && isHost) {
                         showSuccess('Du bist jetzt der Host!');
+                        console.log('💾 SAVE: Became host - saved to localStorage');
                     }
                 } else {
                 }
@@ -4016,7 +4053,19 @@
         
         socket.on('match_left', () => {
             console.log('Match left confirmation received from server');
-            // Client state is already reset, this is just confirmation
+            
+            // Reset all match-related state (backup cleanup)
+            currentMatchId = null;
+            isHost = false;
+            isSpectator = false;
+            currentPlayers = [];
+            
+            // Clear localStorage (backup cleanup)
+            localStorage.removeItem('imposterMatchId');
+            localStorage.removeItem('imposterHost');
+            localStorage.removeItem('imposterSpectator');
+            
+            console.log('🧹 CLEANUP: Match left - all state reset and localStorage cleared');
         });
         
         socket.on('error', (data) => {
@@ -4562,6 +4611,11 @@
                     console.log('Full currentMatch object:', data.currentMatch);
                     console.log('currentMatch.allRounds:', data.currentMatch.allRounds);
                     currentMatchId = data.currentMatch.id;
+                    
+                    // Sync localStorage with server state
+                    localStorage.setItem('imposterMatchId', currentMatchId);
+                    console.log('💾 SYNC: Restored match ID to localStorage from server');
+                    
                     updateURL(data.currentMatch.id); // Update URL when restoring match
                     hideAllScreens();
                     
@@ -4577,9 +4631,12 @@
                         const userPlayer = data.currentMatch.players.find(p => p.name === myPlayerName);
                         if (userPlayer && userPlayer.isHost) {
                             isHost = true;
-                            console.log('You are the host of this match');
+                            localStorage.setItem('imposterHost', 'true');
+                            console.log('💾 SYNC: You are the host - saved to localStorage');
                         } else {
                             isHost = false;
+                            localStorage.removeItem('imposterHost');
+                            console.log('💾 SYNC: Not host - cleared from localStorage');
                         }
                         updateStartGameButton();
                     } else {
@@ -4637,6 +4694,22 @@
                     if (pendingMatchId) {
                         sessionStorage.removeItem('pendingMatchId');
                         joinMatchById(pendingMatchId);
+                    } else {
+                        // Check if localStorage has a match ID that the server doesn't know about
+                        const savedMatchId = localStorage.getItem('imposterMatchId');
+                        if (savedMatchId) {
+                            console.log('🔄 RECOVERY: Found saved match ID, attempting to rejoin:', savedMatchId);
+                            // Try to rejoin the saved match
+                            socket.emit('join_match', {
+                                matchId: savedMatchId,
+                                password: ''
+                            });
+                        } else {
+                            // Clear any stale localStorage data
+                            localStorage.removeItem('imposterHost');
+                            localStorage.removeItem('imposterSpectator');
+                            console.log('🧹 CLEANUP: No server match, cleared stale localStorage');
+                        }
                     }
                 }
             } else {
