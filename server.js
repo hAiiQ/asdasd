@@ -22,6 +22,12 @@ let users = {};
 function saveUsers() {
     try {
         fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+        
+        // Create a backup every time we save (for cloud deployments)
+        const backupFile = 'users.backup.json';
+        fs.writeFileSync(backupFile, JSON.stringify(users, null, 2));
+        
+        console.log('Users saved to', usersFile, 'and backed up to', backupFile);
     } catch (error) {
         console.error('Failed to save users to file:', error);
         throw error; // Re-throw so calling code can handle it
@@ -31,17 +37,59 @@ function saveUsers() {
 // Load users from file
 try {
     if (fs.existsSync(usersFile)) {
-        users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
-        console.log('Loaded existing users.json');
+        const fileContent = fs.readFileSync(usersFile, 'utf8');
+        users = JSON.parse(fileContent);
+        console.log('✅ Loaded existing users.json with', Object.keys(users).length, 'accounts');
+    } else if (fs.existsSync('users.backup.json')) {
+        // Try to load from backup if main file is missing
+        const backupContent = fs.readFileSync('users.backup.json', 'utf8');
+        users = JSON.parse(backupContent);
+        console.log('🔄 Restored from users.backup.json with', Object.keys(users).length, 'accounts');
+        // Recreate main file
+        saveUsers();
     } else if (fs.existsSync(usersTemplateFile)) {
-        users = JSON.parse(fs.readFileSync(usersTemplateFile, 'utf8'));
-        console.log('Loaded users.template.json (fresh deployment)');
+        const templateContent = fs.readFileSync(usersTemplateFile, 'utf8');
+        const templateData = JSON.parse(templateContent);
+        
+        // Extract users object, handle different template structures
+        if (templateData.users) {
+            users = templateData.users; // If template has nested users object
+        } else {
+            // Filter out non-user objects (like _meta)
+            users = {};
+            Object.keys(templateData).forEach(key => {
+                if (!key.startsWith('_') && typeof templateData[key] === 'object' && templateData[key].username) {
+                    users[key] = templateData[key];
+                }
+            });
+        }
+        
+        console.log('📝 Loaded users.template.json (fresh deployment) with', Object.keys(users).length, 'accounts');
         // Save as users.json for future use
         saveUsers();
+    } else {
+        console.log('⚠️  No user files found, starting with empty user database');
+        users = {};
     }
 } catch (error) {
-    console.error('Error loading user data:', error);
-    users = {};
+    console.error('❌ Error loading user data:', error);
+    console.log('🔄 Attempting to recover from backup...');
+    
+    // Try to recover from backup
+    try {
+        if (fs.existsSync('users.backup.json')) {
+            const backupContent = fs.readFileSync('users.backup.json', 'utf8');
+            users = JSON.parse(backupContent);
+            console.log('✅ Recovered from backup with', Object.keys(users).length, 'accounts');
+            saveUsers(); // Recreate main file
+        } else {
+            users = {};
+            console.log('⚠️  No backup available, starting fresh');
+        }
+    } catch (backupError) {
+        console.error('❌ Backup recovery failed:', backupError);
+        users = {};
+    }
 }
 
 // Validate username
