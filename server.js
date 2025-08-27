@@ -3267,17 +3267,21 @@ io.on('connection', (socket) => {
                     currentRound: match.currentRound
                 });
                 
-                // Immediately send the new voting state (frontend will handle timing)
-                io.to(matchId).emit('vote_updated', {
-                    gameState: match.gameState,
-                    votes: match.votes,
-                    players: match.players,
-                    currentPlayer: null,
-                    round: match.currentRound,
-                    words: match.wordsThisRound,
-                    allRounds: match.allRounds,
-                    afterOverlay: true // Special flag to indicate this comes after an overlay
-                });
+                // Send the new voting state AFTER the overlay finishes (5.2 seconds delay)
+                setTimeout(() => {
+                    const currentMatch = matches.get(matchId);
+                    if (currentMatch) {
+                        io.to(matchId).emit('vote_updated', {
+                            gameState: currentMatch.gameState,
+                            votes: currentMatch.votes,
+                            players: currentMatch.players,
+                            currentPlayer: null,
+                            round: currentMatch.currentRound,
+                            words: currentMatch.wordsThisRound,
+                            allRounds: currentMatch.allRounds
+                        });
+                    }
+                }, 5200); // Wait for overlay to finish
             } else {
                 // Still in voting phase, update vote status
                 io.to(matchId).emit('vote_updated', {

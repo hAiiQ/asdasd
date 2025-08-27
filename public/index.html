@@ -2892,9 +2892,9 @@
             try {
                 const audio = new Audio('/sounds/reveal.mp3');
                 audio.volume = 0.7;
-                audio.play().catch(e => console.log('Could not play countdown sound:', e));
+                audio.play().catch(e => console.log('Could not play countdown sound (this is normal if file not found):', e));
             } catch (e) {
-                console.log('Countdown sound playback error:', e);
+                console.log('Countdown sound playback error (this is normal if file not found):', e);
             }
             
             // Hide lobby/waiting room when countdown starts
@@ -3811,21 +3811,10 @@
         socket.on('vote_updated', (data) => {
             console.log('=== vote_updated received ===');
             console.log('data.gameState:', data.gameState);
-            console.log('data.afterOverlay:', data.afterOverlay);
             console.log('hasVoted before processing:', hasVoted);
             console.log('isSpectator:', isSpectator);
             
-            // If this comes after an overlay, delay processing until overlay is done
-            if (data.afterOverlay) {
-                console.log('vote_updated with afterOverlay flag - delaying processing');
-                setTimeout(() => {
-                    console.log('=== Processing delayed vote_updated ===');
-                    processVoteUpdate(data);
-                }, 5500); // Wait for overlay to finish
-                return;
-            }
-            
-            // Process immediately for normal vote updates
+            // Process immediately - backend handles timing
             processVoteUpdate(data);
         });
         
@@ -3853,12 +3842,6 @@
                     console.log('New imposter voting detected, resetting hasVoted');
                     currentVotingType = data.gameState;
                     hasVoted = false; // Reset for new voting phase
-                }
-                
-                // Always reset hasVoted for imposter voting to ensure interface shows
-                if (data.afterOverlay) {
-                    console.log('Imposter voting after overlay - ensuring hasVoted is false');
-                    hasVoted = false;
                 }
                 
                 console.log('Processing imposter voting - hasVoted:', hasVoted, 'isSpectator:', isSpectator);
