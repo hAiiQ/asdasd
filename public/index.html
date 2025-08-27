@@ -3809,6 +3809,20 @@
         });
         
         socket.on('vote_updated', (data) => {
+            // If this comes after an overlay, delay processing until overlay is done
+            if (data.afterOverlay) {
+                console.log('vote_updated with afterOverlay flag - delaying processing');
+                setTimeout(() => {
+                    processVoteUpdate(data);
+                }, 5500); // Wait for overlay to finish
+                return;
+            }
+            
+            // Process immediately for normal vote updates
+            processVoteUpdate(data);
+        });
+        
+        function processVoteUpdate(data) {
             // Spectators should not see voting interfaces
             if (isSpectator) {
                 console.log('Spectator detected - hiding all voting interfaces');
@@ -3908,7 +3922,7 @@
                     document.getElementById('word-input-section').classList.add('hidden');
                 }
             }
-        });
+        }
         
         socket.on('game_finished', (data) => {
             showGameFinishedOverlay(data);
@@ -4090,8 +4104,15 @@
                 currentVotingType = null; // Reset voting type
                 enableVotingButtons();
                 
-                // Show game interface again
-                document.getElementById('game-info').classList.remove('hidden');
+                // Only show game interface if we're not switching to a new voting phase
+                // Check if this is switching to imposter voting or continuing game
+                if (data.resultType === 'imposter_voting') {
+                    // Don't show game-info yet, wait for vote_updated to show voting interface
+                    console.log('Switching to imposter voting - waiting for vote_updated');
+                } else {
+                    // Show game interface again for other cases (continue, eliminated player, etc.)
+                    document.getElementById('game-info').classList.remove('hidden');
+                }
                 
                 // Show the feedback message only if no overlay was shown
                 if (data.message && !data.resultType) {

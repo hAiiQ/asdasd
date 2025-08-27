@@ -3267,21 +3267,17 @@ io.on('connection', (socket) => {
                     currentRound: match.currentRound
                 });
                 
-                // After overlay, switch to imposter voting
-                setTimeout(() => {
-                    const updatedMatch = matches.get(matchId);
-                    if (updatedMatch && updatedMatch.gameState === 'voting_imposter') {
-                        io.to(matchId).emit('vote_updated', {
-                            gameState: updatedMatch.gameState,
-                            votes: updatedMatch.votes,
-                            players: updatedMatch.players,
-                            currentPlayer: null,
-                            round: updatedMatch.currentRound,
-                            words: updatedMatch.wordsThisRound,
-                            allRounds: updatedMatch.allRounds
-                        });
-                    }
-                }, 5500); // Wait for overlay to finish (5 seconds + buffer)
+                // Immediately send the new voting state (frontend will handle timing)
+                io.to(matchId).emit('vote_updated', {
+                    gameState: match.gameState,
+                    votes: match.votes,
+                    players: match.players,
+                    currentPlayer: null,
+                    round: match.currentRound,
+                    words: match.wordsThisRound,
+                    allRounds: match.allRounds,
+                    afterOverlay: true // Special flag to indicate this comes after an overlay
+                });
             } else {
                 // Still in voting phase, update vote status
                 io.to(matchId).emit('vote_updated', {
